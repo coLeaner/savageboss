@@ -47,10 +47,40 @@ const photos = [
 
 	<div class="wrap">
 		<p class="caption" data-anim="row">
-			<span class="time">9:02pm</span> in Paynesville, Liberia
+			<span class="time" data-clock aria-label="Current local time in Paynesville">—:—:—</span> in Paynesville, Liberia
 		</p>
 	</div>
 </section>
+
+<script is:inline>
+	// Live local time in Paynesville (Liberia runs on GMT+0, Africa/Monrovia).
+	(function () {
+		var el = document.querySelector('[data-clock]');
+		if (!el) return;
+		var fmt = new Intl.DateTimeFormat('en-US', {
+			timeZone: 'Africa/Monrovia',
+			hour: 'numeric',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: true,
+		});
+		function render() {
+			var map = {};
+			fmt.formatToParts(new Date()).forEach(function (p) {
+				map[p.type] = p.value;
+			});
+			el.innerHTML =
+				map.hour +
+				'<span class="c">:</span>' +
+				map.minute +
+				'<span class="c">:</span>' +
+				map.second +
+				(map.dayPeriod || '').toLowerCase();
+		}
+		render();
+		setInterval(render, 1000);
+	})();
+</script>
 
 <style>
 	.offscreen {
@@ -176,6 +206,21 @@ const photos = [
 	.caption .time {
 		color: var(--text);
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* Blinking colons give the ticking clock a little pulse. */
+	.caption .time :global(.c) {
+		animation: clock-blink 1s ease-in-out infinite;
+	}
+
+	@keyframes clock-blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.25;
+		}
 	}
 
 	/* No-JS / reduced-motion fallback: reveal the label on hover via CSS. */

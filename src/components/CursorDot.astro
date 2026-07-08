@@ -1,0 +1,96 @@
+---
+// A soft trailing cursor ring that eases toward the pointer, swells over
+// interactive elements, and gives a magnetic tug to [data-magnetic] controls.
+// Pointer/hover devices only; the native cursor stays visible underneath.
+---
+
+<div class="cursor-ring" data-cursor aria-hidden="true"></div>
+
+<script>
+	import { gsap } from 'gsap';
+
+	const dot = document.querySelector<HTMLElement>('[data-cursor]');
+	const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (dot && fine) {
+		document.documentElement.classList.add('has-cursor');
+
+		const dur = reduced ? 0 : 0.4;
+		const xTo = gsap.quickTo(dot, 'x', { duration: dur, ease: 'power3' });
+		const yTo = gsap.quickTo(dot, 'y', { duration: dur, ease: 'power3' });
+
+		let shown = false;
+		window.addEventListener('mousemove', (e) => {
+			if (!shown) {
+				shown = true;
+				gsap.to(dot, { opacity: 1, duration: 0.3 });
+			}
+			xTo(e.clientX);
+			yTo(e.clientY);
+		});
+		document.addEventListener('mouseleave', () =>
+			gsap.to(dot, { opacity: 0, duration: 0.3 })
+		);
+
+		// Ring swells (and fills a touch) over anything clickable.
+		const hoverTargets =
+			'a[href], button, .brushlink, .polaroid, .trex, .fs-opt, [data-magnetic]';
+		document.querySelectorAll<HTMLElement>(hoverTargets).forEach((el) => {
+			el.addEventListener('mouseenter', () =>
+				gsap.to(dot, { scale: 2.1, borderWidth: 1, duration: 0.3, ease: 'power3' })
+			);
+			el.addEventListener('mouseleave', () =>
+				gsap.to(dot, { scale: 1, borderWidth: 1.5, duration: 0.35, ease: 'power3' })
+			);
+		});
+
+		// Magnetic pull: the element leans toward the cursor while hovered.
+		if (!reduced) {
+			document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+				const strength = Number(el.dataset.magnetic) || 0.35;
+				el.addEventListener('mousemove', (e) => {
+					const r = el.getBoundingClientRect();
+					const mx = e.clientX - (r.left + r.width / 2);
+					const my = e.clientY - (r.top + r.height / 2);
+					gsap.to(el, { x: mx * strength, y: my * strength, duration: 0.4, ease: 'power3' });
+				});
+				el.addEventListener('mouseleave', () =>
+					gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' })
+				);
+			});
+		}
+	}
+</script>
+
+<style is:global>
+	.cursor-ring {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 30px;
+		height: 30px;
+		margin: -15px 0 0 -15px;
+		border: 1.5px solid #fff;
+		border-radius: 50%;
+		pointer-events: none;
+		z-index: 9999;
+		opacity: 0;
+		mix-blend-mode: difference;
+		will-change: transform;
+	}
+
+	/* Hide on touch / coarse pointers — a trailing dot there is just clutter. */
+	@media (hover: none), (pointer: coarse) {
+		.cursor-ring {
+			display: none;
+		}
+	}
+
+	/* GSAP owns the transform on magnetic elements; drop any CSS transform
+	   transition so the two don't fight and jitter. */
+	.has-cursor [data-magnetic] {
+		transition-property: color, border-color, background-color, background,
+			opacity, box-shadow;
+	}
+</style>

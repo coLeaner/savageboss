@@ -6,6 +6,7 @@ import Work from '../components/Work.astro';
 import OffScreen from '../components/OffScreen.astro';
 import Hero from '../components/Hero.astro';
 import Trex from '../components/Trex.astro';
+import Guestbook from '../components/Guestbook.astro';
 import FontSwitcher from '../components/FontSwitcher.astro';
 ---
 
@@ -19,6 +20,7 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 		<!-- Polaroid row breaks out wider than the reading column -->
 		<OffScreen />
 		<Hero />
+		<Guestbook />
 		<FontSwitcher />
 	</main>
 	<Trex />
@@ -151,10 +153,9 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 						{ '--paint': 0 },
 						{ '--paint': 1, duration: 0.45, ease: 'power2.out', overwrite: 'auto' }
 					);
-					gsap.to(link, { y: -2, duration: 0.35, ease: 'power2.out' });
 				});
 				link.addEventListener('mouseleave', () =>
-					gsap.to(link, { '--paint': 1, y: 0, duration: 0.25, ease: 'power2.in' })
+					gsap.to(link, { '--paint': 1, duration: 0.25, ease: 'power2.in' })
 				);
 			});
 
@@ -316,7 +317,28 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 		const bubble = greeter.querySelector<HTMLElement>('[data-bubble]');
 
 		if (trex && bubble) {
-			const friendly = "Hi, I'm Boss";
+			const nightHour = Number(
+					new Intl.DateTimeFormat('en-US', {
+						timeZone: 'Africa/Monrovia',
+						hour: 'numeric',
+						hourCycle: 'h23',
+					}).format(new Date())
+				);
+				// Late Paynesville night → Boss dozes off (closed eyes + zzz).
+				const isNight = nightHour >= 22 || nightHour < 6;
+				const sleep = () => {
+					greeter.classList.add('sleeping');
+					trex.classList.add('sleeping');
+				};
+				const wake = () => {
+					greeter.classList.remove('sleeping');
+					trex.classList.remove('sleeping');
+				};
+				const friendly = isNight ? 'Zzz…' : "Hi, I'm Boss";
+				if (isNight) {
+					sleep();
+					bubble.textContent = friendly;
+				}
 			const pokes = ['Hey!', 'Quit it.', "I'm warning you…"];
 			const angry = 'APEX PREDATOR! 🦖';
 			let clicks = 0;
@@ -354,10 +376,12 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 				greeter.classList.remove('angry');
 				trex.classList.remove('angry');
 				paint(0);
+					if (isNight) sleep();
 				bubble.textContent = friendly;
 			};
 
 			trex.addEventListener('click', () => {
+					wake();
 				clicks++;
 				clearTimeout(calmTimer);
 				paint(Math.min(clicks, 4));
@@ -397,6 +421,93 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 			greeter.addEventListener('mouseenter', showBubble);
 			greeter.addEventListener('mouseleave', hideBubble);
 
+				// --- Secret code: type "boss" or the Konami code to unleash Boss ---
+				const confettiBurst = () => {
+					const rect = trex.getBoundingClientRect();
+					const ox = rect.left + rect.width / 2;
+					const oy = rect.top + rect.height / 2;
+					const colors = ['#f3b5e5', '#f5921f', '#8ab4ff', '#8fbf3f', '#d83a2c', '#f5b56b'];
+					for (let i = 0; i < 46; i++) {
+						const bit = document.createElement('div');
+						bit.className = 'confetti-bit';
+						bit.style.background = colors[i % colors.length];
+						bit.style.left = ox + 'px';
+						bit.style.top = oy + 'px';
+						document.body.appendChild(bit);
+						const angle = Math.random() * Math.PI * 2;
+						const dist = 90 + Math.random() * 170;
+						gsap.set(bit, { xPercent: -50, yPercent: -50, rotation: Math.random() * 360 });
+						gsap.to(bit, {
+							x: Math.cos(angle) * dist,
+							y: Math.sin(angle) * dist - 70,
+							rotation: '+=' + (Math.random() * 720 - 360),
+							duration: 1 + Math.random() * 0.5,
+							ease: 'power2.out',
+						});
+						gsap.to(bit, {
+							y: '+=340',
+							opacity: 0,
+							duration: 1.1,
+							delay: 0.35 + Math.random() * 0.3,
+							ease: 'power1.in',
+							onComplete: () => bit.remove(),
+						});
+					}
+				};
+
+				const roar = () => {
+					wake();
+					clearTimeout(calmTimer);
+					clicks = 4;
+					greeter.classList.add('angry');
+					trex.classList.add('angry');
+					paint(4);
+					bubble.textContent = 'RAAAWR! APEX PREDATOR 🦖';
+					showBubble();
+					if (!reduced) {
+						gsap.fromTo(
+							trex,
+							{ rotation: -12 },
+							{
+								rotation: 12,
+								duration: 0.06,
+								repeat: 11,
+								yoyo: true,
+								ease: 'power1.inOut',
+								onComplete: () => gsap.to(trex, { rotation: 0, duration: 0.2 }),
+							}
+						);
+						gsap.fromTo(
+							trex,
+							{ scale: 1 },
+							{ scale: 1.35, duration: 0.45, ease: 'back.out(3)', yoyo: true, repeat: 1 }
+						);
+						confettiBurst();
+					}
+					// Boss cools back down after the rampage.
+					calmTimer = setTimeout(() => {
+						calmDown();
+						hideBubble();
+					}, 6000);
+				};
+
+				const konami = [
+					'arrowup', 'arrowup', 'arrowdown', 'arrowdown',
+					'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a',
+				];
+				let keyBuf: string[] = [];
+				window.addEventListener('keydown', (e) => {
+					// Don't hijack typing in the guestbook or any field.
+					const t = e.target as HTMLElement | null;
+					if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+					keyBuf.push(e.key.toLowerCase());
+					if (keyBuf.length > konami.length) keyBuf = keyBuf.slice(-konami.length);
+					if (keyBuf.slice(-4).join('') === 'boss' || keyBuf.join(',') === konami.join(',')) {
+						keyBuf = [];
+						roar();
+					}
+				});
+
 			if (reduced) {
 				gsap.set(trex, { opacity: 1, y: 0 });
 				gsap.set(bubble, { opacity: 1, scale: 1, transformOrigin: '22% 100%' });
@@ -408,7 +519,13 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 					.timeline({ delay: 0.8 })
 					.to(trex, { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.7)' })
 					.to(bubble, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' }, '-=0.15')
-					.to(trex, { y: -6, duration: 1.1, ease: 'sine.inOut', repeat: -1, yoyo: true }, '+=0.15');
+					.to(
+						trex,
+						isNight
+							? { scale: 1.045, transformOrigin: '50% 100%', duration: 2.4, ease: 'sine.inOut', repeat: -1, yoyo: true }
+							: { y: -6, duration: 1.1, ease: 'sine.inOut', repeat: -1, yoyo: true },
+						'+=0.15'
+					);
 
 				// Tuck the greeting away after a few seconds (only if not mid-poke).
 				gsap.to(bubble, {

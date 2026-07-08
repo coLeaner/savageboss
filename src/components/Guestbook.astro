@@ -1,0 +1,283 @@
+---
+// Visitor guestbook — leave a short signed note that everyone can see.
+// Persists to Supabase (public read + insert, guarded by RLS).
+---
+
+<section class="guestbook">
+	<div class="wrap">
+		<h2 class="heading" data-anim="fade">Guestbook</h2>
+		<p class="lead" data-anim="fade">Drop ya note, my paddy — make the world know you pass here.</p>
+
+		<form class="gb-form" data-gb-form autocomplete="off">
+			<div class="fields">
+				<input
+					class="gb-input gb-name"
+					name="name"
+					type="text"
+					maxlength="40"
+					required
+					placeholder="Ya name"
+					aria-label="Your name"
+				/>
+				<input
+					class="gb-input gb-msg"
+					name="message"
+					type="text"
+					maxlength="280"
+					required
+					placeholder="Say something small…"
+					aria-label="Your message"
+				/>
+				<button class="gb-send" type="submit" data-magnetic="0.35">Sign</button>
+			</div>
+			<p class="gb-status" data-gb-status role="status" aria-live="polite"></p>
+		</form>
+
+		<ul class="gb-list" data-gb-list aria-live="polite"></ul>
+	</div>
+</section>
+
+<script>
+	import { supabase } from '../lib/supabase';
+
+	const form = document.querySelector<HTMLFormElement>('[data-gb-form]');
+	const list = document.querySelector<HTMLElement>('[data-gb-list]');
+	const status = document.querySelector<HTMLElement>('[data-gb-status]');
+	const btn = form?.querySelector<HTMLButtonElement>('.gb-send');
+
+	function say(msg: string, kind: 'ok' | 'err' | '' = '') {
+		if (!status) return;
+		status.textContent = msg;
+		status.dataset.kind = kind;
+	}
+
+	// "3h ago"-style relative time, kept tiny and dependency-free.
+	function ago(iso: string) {
+		const s = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+		const steps: [number, string][] = [
+			[60, 's'], [60, 'm'], [24, 'h'], [7, 'd'], [4.3, 'w'], [12, 'mo'],
+		];
+		let val = s, unit = 's';
+		for (const [size, u] of steps) {
+			if (val < size) { unit = u; break; }
+			val = Math.round(val / size);
+			unit = u;
+		}
+		return unit === 's' ? 'just now' : `${val}${unit} ago`;
+	}
+
+	// Build a note row with textContent only — visitor text is never treated
+	// as HTML, so a note can't inject markup onto the page.
+	function noteEl(row: { name: string; message: string; created_at: string }) {
+		const li = document.createElement('li');
+		li.className = 'gb-note';
+
+		const head = document.createElement('div');
+		head.className = 'gb-note-head';
+		const who = document.createElement('span');
+		who.className = 'gb-who';
+		who.textContent = row.name;
+		const when = document.createElement('span');
+		when.className = 'gb-when';
+		when.textContent = ago(row.created_at);
+		head.append(who, when);
+
+		const body = document.createElement('p');
+		body.className = 'gb-text';
+		body.textContent = row.message;
+
+		li.append(head, body);
+		return li;
+	}
+
+	async function load() {
+		if (!supabase || !list) return;
+		const { data, error } = await supabase
+			.from('guestbook')
+			.select('name, message, created_at')
+			.order('created_at', { ascending: false })
+			.limit(40);
+		if (error) return;
+		list.replaceChildren(...(data ?? []).map(noteEl));
+	}
+
+	if (!supabase) {
+		// Not wired up yet — keep it honest rather than showing a broken form.
+		form?.setAttribute('hidden', '');
+		say('The wall is warming up — check back soon.');
+		status?.removeAttribute('hidden');
+	} else if (form) {
+		load();
+		form.addEventListener('submit', async (e) => {
+			e.preventDefault();
+			const fd = new FormData(form);
+			const name = String(fd.get('name') || '').trim();
+			const message = String(fd.get('message') || '').trim();
+			if (!name || !message) return;
+
+			btn && (btn.disabled = true);
+			say('Signing…');
+			const { error } = await supabase.from('guestbook').insert({ name, message });
+			btn && (btn.disabled = false);
+
+			if (error) {
+				say('Ay, that one failed — try again.', 'err');
+				return;
+			}
+			form.reset();
+			say('Signed — thank ya!', 'ok');
+			// Show the fresh note right away without a round-trip.
+			list?.prepend(noteEl({ name, message, created_at: new Date().toISOString() }));
+			setTimeout(() => say(''), 2500);
+		});
+	}
+</script>
+
+<style>
+	.guestbook {
+		margin-top: clamp(3.5rem, 9vh, 6rem);
+		margin-bottom: clamp(3.5rem, 9vh, 6rem);
+	}
+
+	.wrap {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+
+	.heading {
+		margin: 0 0 0.5rem;
+		padding-top: 1.75rem;
+		border-top: 1px solid var(--line);
+		font-size: 0.9375rem;
+		font-weight: 400;
+		color: var(--muted);
+	}
+
+	.lead {
+		margin: 0 0 1.5rem;
+		color: var(--muted);
+	}
+
+	.gb-form {
+		margin-bottom: 2rem;
+	}
+
+	.fields {
+		display: grid;
+		grid-template-columns: minmax(0, 12rem) minmax(0, 1fr) auto;
+		gap: 0.6rem;
+	}
+
+	.gb-input {
+		font: inherit;
+		font-size: 1rem;
+		color: var(--text);
+		background: transparent;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		padding: 0.6rem 0.8rem;
+		transition: border-color 0.25s ease;
+		min-width: 0;
+	}
+
+	.gb-input::placeholder {
+		color: var(--faint);
+	}
+
+	.gb-input:focus-visible {
+		outline: none;
+		border-color: var(--accent);
+	}
+
+	.gb-send {
+		font: inherit;
+		font-weight: 500;
+		color: var(--bg);
+		background: var(--text);
+		border: none;
+		border-radius: 10px;
+		padding: 0.6rem 1.2rem;
+		cursor: pointer;
+		transition: opacity 0.25s ease;
+	}
+
+	.gb-send:hover {
+		opacity: 0.85;
+	}
+
+	.gb-send:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+
+	.gb-status {
+		margin: 0.7rem 0 0;
+		min-height: 1.2em;
+		font-size: 0.875rem;
+		color: var(--muted);
+	}
+
+	.gb-status[data-kind='ok'] {
+		color: #3fa66a;
+	}
+
+	.gb-status[data-kind='err'] {
+		color: #d8574b;
+	}
+
+	.gb-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	/* Notes are built in JS at runtime, so they never receive Astro's scoped
+	   hash — style them with :global so the rules actually apply. */
+	.gb-list :global(.gb-note) {
+		padding: 0.9rem 1.05rem;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+	}
+
+	.gb-list :global(.gb-note-head) {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-bottom: 0.3rem;
+	}
+
+	.gb-list :global(.gb-who) {
+		font-weight: 600;
+		color: var(--accent);
+		letter-spacing: -0.01em;
+		overflow-wrap: anywhere;
+	}
+
+	.gb-list :global(.gb-when) {
+		flex: none;
+		font-size: 0.8125rem;
+		color: var(--faint);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.gb-list :global(.gb-text) {
+		margin: 0;
+		color: var(--muted);
+		overflow-wrap: anywhere;
+	}
+
+	@media (max-width: 560px) {
+		.fields {
+			grid-template-columns: 1fr;
+		}
+
+		.gb-send {
+			justify-self: start;
+			padding: 0.6rem 1.6rem;
+		}
+	}
+</style>

@@ -1,6 +1,7 @@
 ---
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
+import CursorDot from '../components/CursorDot.astro';
 
 interface Props {
 	title?: string;
@@ -49,7 +50,7 @@ const {
 		</script>
 	</head>
 	<body>
-		<button id="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle theme">
+		<button id="theme-toggle" type="button" data-magnetic="0.4" aria-label="Toggle color theme" title="Toggle theme">
 			<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true">
 				<circle cx="12" cy="12" r="4"></circle>
 				<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
@@ -59,6 +60,7 @@ const {
 			</svg>
 		</button>
 		<slot />
+		<CursorDot />
 
 		<script is:inline>
 			(function () {
@@ -239,6 +241,19 @@ const {
 
 	a {
 		color: inherit;
+	}
+
+	/* Confetti bits spawned by Boss's secret-code rampage (see index.astro). */
+	.confetti-bit {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 9px;
+		height: 9px;
+		border-radius: 2px;
+		pointer-events: none;
+		z-index: 9998;
+		will-change: transform, opacity;
 	}
 
 	::selection {

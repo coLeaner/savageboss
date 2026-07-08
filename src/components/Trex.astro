@@ -30,9 +30,14 @@
 		<!-- nostril -->
 		<circle class="mouth" cx="103" cy="38" r="1.7"></circle>
 		<!-- eye -->
-		<circle cx="92" cy="42" r="5.5" fill="#fff"></circle>
+		<circle class="eye" cx="92" cy="42" r="5.5" fill="#fff"></circle>
 		<circle class="pupil" cx="94" cy="42" r="2.6"></circle>
+		<!-- closed eyelid, shown only when Boss is sleeping -->
+		<path class="eyelid" d="M86.5,42 q5.5,5 11,0" fill="none" stroke-linecap="round"></path>
 	</svg>
+
+	<!-- floating zzz while Boss sleeps through the Paynesville night -->
+	<div class="zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></div>
 </div>
 
 <style>
@@ -78,6 +83,69 @@
 	}
 	.pupil {
 		fill: #1a1a1a;
+	}
+
+	/* --- Sleeping mode: closed eye + floating zzz at night --- */
+	.eyelid {
+		display: none;
+		stroke: #2f6b28;
+		stroke-width: 2;
+	}
+	.trex.sleeping .eye,
+	.trex.sleeping .pupil {
+		display: none;
+	}
+	.trex.sleeping .eyelid {
+		display: block;
+	}
+
+	.zzz {
+		position: absolute;
+		top: -4px;
+		left: 34px;
+		width: 0;
+		height: 0;
+		pointer-events: none;
+		display: none;
+	}
+	.greeter.sleeping .zzz {
+		display: block;
+	}
+	.zzz span {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		font-weight: 700;
+		font-style: italic;
+		color: var(--muted);
+		opacity: 0;
+		animation: zzz-float 3s ease-in-out infinite;
+	}
+	.zzz span:nth-child(1) {
+		font-size: 0.7rem;
+		animation-delay: 0s;
+	}
+	.zzz span:nth-child(2) {
+		font-size: 0.9rem;
+		animation-delay: 1s;
+	}
+	.zzz span:nth-child(3) {
+		font-size: 1.15rem;
+		animation-delay: 2s;
+	}
+
+	@keyframes zzz-float {
+		0% {
+			transform: translate(0, 0) rotate(-8deg);
+			opacity: 0;
+		}
+		25% {
+			opacity: 0.85;
+		}
+		100% {
+			transform: translate(16px, -30px) rotate(10deg);
+			opacity: 0;
+		}
 	}
 
 	/* Angry mode — repeated clicks turn Boss into an apex predator. */
