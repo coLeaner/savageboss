@@ -1,11 +1,334 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Intro from '../components/Intro.astro';
+import Skills from '../components/Skills.astro';
+import Work from '../components/Work.astro';
+import OffScreen from '../components/OffScreen.astro';
+import Hero from '../components/Hero.astro';
 ---
 
 <Layout>
-	<Welcome />
+	<main class="shell">
+		<div class="col">
+			<Intro />
+			<Skills />
+			<Work />
+		</div>
+		<!-- Polaroid row breaks out wider than the reading column -->
+		<OffScreen />
+		<Hero />
+	</main>
 </Layout>
+
+<style>
+	.shell {
+		padding: 0 var(--gutter);
+	}
+
+	.col {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+</style>
+
+<script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { SplitText } from 'gsap/SplitText';
+	import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	if (!reduced) {
+		gsap.registerPlugin(ScrollTrigger, SplitText, MotionPathPlugin);
+
+		// Wait for the variable font so SplitText measures line breaks correctly.
+		const ready = (document as any).fonts?.ready ?? Promise.resolve();
+
+		ready.then(() => {
+			const ease = 'power3.out';
+
+			// --- Intro: name + paragraphs reveal on load ---
+			const intro = gsap.timeline({ defaults: { ease } });
+
+			// Bottom hero highlight boxes wipe in left→right when scrolled into view.
+			const tags = gsap.utils.toArray<HTMLElement>('[data-tag]');
+			if (tags.length) {
+				gsap.to(tags, {
+					clipPath: 'inset(0 0% 0 0)',
+					duration: 0.9,
+					ease: 'power4.out',
+					stagger: 0.16,
+					scrollTrigger: { trigger: '.hero-section', start: 'top 82%' },
+				});
+				// Playful tilt on hover.
+				tags.forEach((tag, i) => {
+					tag.addEventListener('mouseenter', () =>
+						gsap.to(tag, {
+							scale: 1.04,
+							rotate: i === 0 ? -2.5 : 2.5,
+							duration: 0.4,
+							ease: 'power2.out',
+						})
+					);
+					tag.addEventListener('mouseleave', () =>
+						gsap.to(tag, {
+							scale: 1,
+							rotate: 0,
+							duration: 0.6,
+							ease: 'elastic.out(1, 0.5)',
+						})
+					);
+				});
+			}
+
+			gsap.utils.toArray<HTMLElement>('[data-anim="fade"]').forEach((el) => {
+				intro.to(el, { opacity: 1, y: 0, duration: 0.7 }, '<0.15');
+				gsap.set(el, { y: 12 });
+			});
+
+			gsap.utils.toArray<HTMLElement>('[data-anim="lines"]').forEach((el) => {
+				const split = new SplitText(el, { type: 'lines', mask: 'lines' });
+				gsap.set(el, { opacity: 1 });
+				intro.from(
+					split.lines,
+					{ yPercent: 100, opacity: 0, duration: 0.9, stagger: 0.08 },
+					'<0.1'
+				);
+			});
+
+			// --- Skills grid: staggered entrance on scroll ---
+			const cards = gsap.utils.toArray<HTMLElement>('[data-anim="cards"]');
+			if (cards.length) {
+				gsap.fromTo(
+					cards,
+					{ opacity: 0, y: 24 },
+					{
+						opacity: 1,
+						y: 0,
+						duration: 0.6,
+						ease,
+						stagger: { each: 0.05, from: 'start' },
+						scrollTrigger: { trigger: '.grid', start: 'top 85%' },
+					}
+				);
+			}
+
+			// --- Skills chips: gentle lift on hover ---
+			cards.forEach((card) => {
+				card.addEventListener('mouseenter', () =>
+					gsap.to(card, { y: -5, duration: 0.35, ease: 'power3.out' })
+				);
+				card.addEventListener('mouseleave', () =>
+					gsap.to(card, { y: 0, duration: 0.5, ease: 'power3.out' })
+				);
+			});
+
+			// --- Work rows: fade + slide up on scroll ---
+			gsap.utils.toArray<HTMLElement>('[data-anim="row"]').forEach((row) => {
+				gsap.fromTo(
+					row,
+					{ opacity: 0, y: 22 },
+					{
+						opacity: 1,
+						y: 0,
+						duration: 0.7,
+						ease,
+						scrollTrigger: { trigger: row, start: 'top 88%' },
+					}
+				);
+			});
+
+			// --- "Say hi" links: paint-brush stroke sweeps in on hover ---
+			gsap.utils.toArray<HTMLElement>('.brushlink').forEach((link) => {
+				gsap.set(link, { '--paint': 0 });
+				link.addEventListener('mouseenter', () =>
+					gsap.to(link, {
+						'--paint': 1,
+						y: -2,
+						duration: 0.5,
+						ease: 'power2.out',
+					})
+				);
+				link.addEventListener('mouseleave', () =>
+					gsap.to(link, {
+						'--paint': 0,
+						y: 0,
+						duration: 0.3,
+						ease: 'power2.in',
+					})
+				);
+			});
+
+			// --- Work rows: GSAP slide on hover (color handled by CSS) ---
+			gsap.utils.toArray<HTMLElement>('.rowline').forEach((row) => {
+				const title = row.querySelector<HTMLElement>('.title');
+				const cat = row.querySelector<HTMLElement>('.category');
+				if (!title) return;
+				const hover = 'power3.out';
+				row.addEventListener('mouseenter', () => {
+					gsap.to(title, { x: 10, duration: 0.4, ease: hover });
+					if (cat) gsap.to(cat, { x: -4, duration: 0.4, ease: hover });
+				});
+				row.addEventListener('mouseleave', () => {
+					gsap.to(title, { x: 0, duration: 0.45, ease: hover });
+					if (cat) gsap.to(cat, { x: 0, duration: 0.45, ease: hover });
+				});
+			});
+
+			// --- Polaroids: start stacked/tilted, then fan out on scroll ---
+			const fan = document.querySelector<HTMLElement>('[data-fan]');
+			const polaroids = gsap.utils.toArray<HTMLElement>('[data-polaroid]');
+			if (fan && polaroids.length) {
+				gsap.set(fan, { opacity: 1 });
+				const mid = (polaroids.length - 1) / 2;
+
+				polaroids.forEach((card, i) => {
+					const offset = i - mid;
+					gsap.set(card, {
+						rotate: 0,
+						x: -offset * 40,
+						y: 30,
+						opacity: 0,
+						transformOrigin: 'bottom center',
+					});
+					// resting fanned angle
+					card.style.setProperty('--rest', `${offset * 6}deg`);
+				});
+
+				gsap.to(polaroids, {
+					rotate: (i) => (i - mid) * 6,
+					x: 0,
+					y: 0,
+					opacity: 1,
+					duration: 1,
+					ease: 'power3.out',
+					stagger: 0.09,
+					scrollTrigger: { trigger: fan, start: 'top 82%' },
+					onComplete: () =>
+						polaroids.forEach((c) => {
+							// hand rotation back to CSS so :hover can override it
+							c.style.transform = `rotate(var(--rest))`;
+						}),
+				});
+
+				// Hover label pill: pop up above each polaroid.
+				polaroids.forEach((card) => {
+					const tip = card.querySelector<HTMLElement>('.tip');
+					if (!tip) return;
+					gsap.set(tip, {
+						xPercent: -50,
+						yPercent: -50,
+						y: 8,
+						scale: 0.9,
+						opacity: 0,
+						transformOrigin: '50% 50%',
+					});
+					card.addEventListener('mouseenter', () =>
+						gsap.to(tip, {
+							y: 0,
+							scale: 1,
+							opacity: 1,
+							duration: 0.35,
+							ease: 'back.out(2.2)',
+						})
+					);
+					card.addEventListener('mouseleave', () =>
+						gsap.to(tip, {
+							y: 8,
+							scale: 0.9,
+							opacity: 0,
+							duration: 0.25,
+							ease: 'power2.in',
+						})
+					);
+				});
+			}
+
+			// --- MotionPath: a paper plane endlessly loops over the photos ---
+			const plane = document.querySelector('#plane');
+			if (plane) {
+				gsap.set(plane, { opacity: 0 });
+				gsap.to(plane, {
+					duration: 17,
+					repeat: -1,
+					ease: 'none',
+					motionPath: {
+						path: '#flightPath',
+						align: '#flightPath',
+						alignOrigin: [0.5, 0.5],
+						autoRotate: true,
+					},
+				});
+				// fade the plane in once it's placed on the path
+				gsap.to(plane, { opacity: 1, duration: 0.6, delay: 0.1, ease: 'power1.out' });
+			}
+
+			ScrollTrigger.refresh();
+		});
+	}
+
+	// --- Click-to-copy email (runs regardless of motion preference) ---
+	const copyEl = document.getElementById('copy-email');
+	if (copyEl) {
+		const label = copyEl.querySelector<HTMLElement>('.label');
+		const email = copyEl.getAttribute('data-email') || '';
+		let busy = false;
+
+		async function copyText(text: string) {
+			try {
+				await navigator.clipboard.writeText(text);
+			} catch {
+				const ta = document.createElement('textarea');
+				ta.value = text;
+				ta.style.position = 'fixed';
+				ta.style.opacity = '0';
+				document.body.appendChild(ta);
+				ta.select();
+				try {
+					document.execCommand('copy');
+				} catch {}
+				ta.remove();
+			}
+		}
+
+		copyEl.addEventListener('click', async (e) => {
+			e.preventDefault();
+			if (busy || !label) return;
+			busy = true;
+			await copyText(email);
+
+			if (reduced) {
+				label.textContent = 'Copied!';
+				setTimeout(() => {
+					label.textContent = 'email';
+					busy = false;
+				}, 1400);
+				return;
+			}
+
+			// "email" slides up out, "Copied!" slides up in, then reverses back.
+			gsap
+				.timeline({ onComplete: () => (busy = false) })
+				.to(label, {
+					yPercent: -120,
+					opacity: 0,
+					duration: 0.22,
+					ease: 'power2.in',
+					onComplete: () => (label.textContent = 'Copied!'),
+				})
+				.set(label, { yPercent: 120 })
+				.to(label, { yPercent: 0, opacity: 1, duration: 0.32, ease: 'power2.out' })
+				.to(label, {
+					yPercent: -120,
+					opacity: 0,
+					duration: 0.22,
+					ease: 'power2.in',
+					delay: 1.2,
+					onComplete: () => (label.textContent = 'email'),
+				})
+				.set(label, { yPercent: 120 })
+				.to(label, { yPercent: 0, opacity: 1, duration: 0.32, ease: 'power2.out' });
+		});
+	}
+</script>

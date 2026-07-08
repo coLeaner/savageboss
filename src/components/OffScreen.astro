@@ -1,0 +1,187 @@
+---
+// "Off screen" — a fanned polaroid row of personal photos.
+// Images live in /public and are served from the site root.
+// TODO(Abraham): rename each `label` to describe what's actually in the photo.
+const photos = [
+	{ src: '/Screenshot_20260626_140850_Instagram.jpg', label: 'a good day' },
+	{ src: '/Screenshot_20260630_175044_Instagram.jpg', label: 'night vibes' },
+	{ src: '/Screenshot_20260524_201442_Instagram(1).jpg', label: 'out exploring' },
+];
+---
+
+<section class="offscreen">
+	<div class="wrap">
+		<h2 class="heading" data-anim="fade">Off screen</h2>
+	</div>
+
+	<div class="stage">
+		<svg class="flight" viewBox="0 0 800 240" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+			<path
+				id="flightPath"
+				class="trail"
+				fill="none"
+				d="M40,150 C140,70 260,70 360,120 C460,170 560,80 680,80 C760,80 780,150 700,170 C580,200 460,120 360,160 C260,200 140,210 60,180 C20,165 20,175 40,150 Z"
+			></path>
+			<g id="plane" class="plane">
+				<path class="wing" d="M-13,-7 L15,0 L-13,7 L-6,0 Z"></path>
+				<path class="fold" d="M-6,0 L15,0 L-13,7 Z"></path>
+			</g>
+		</svg>
+
+		<div class="fan" data-fan>
+			{
+				photos.map((photo) => (
+					<figure class="polaroid" data-polaroid>
+						<figcaption class="tip">{photo.label}</figcaption>
+						<img src={photo.src} alt={photo.label} loading="lazy" />
+					</figure>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="wrap">
+		<p class="caption" data-anim="row">
+			<span class="time">9:02pm</span> in Paynesville, Liberia
+		</p>
+	</div>
+</section>
+
+<style>
+	.offscreen {
+		margin-top: clamp(3.5rem, 9vh, 6rem);
+		margin-bottom: clamp(3.5rem, 9vh, 6rem);
+	}
+
+	.wrap {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+
+	.heading {
+		margin: 0 0 2.5rem;
+		font-size: 0.9375rem;
+		font-weight: 400;
+		color: var(--muted);
+	}
+
+	.stage {
+		position: relative;
+	}
+
+	/* MotionPath flight layer — a paper plane loops over the photos. */
+	.flight {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 3;
+		pointer-events: none;
+		overflow: visible;
+		display: none;
+	}
+
+	html.js:not(.reduce-motion) .flight {
+		display: block;
+	}
+
+	.plane {
+		color: var(--accent);
+	}
+	.plane .wing {
+		fill: currentColor;
+	}
+	.plane .fold {
+		fill: currentColor;
+		opacity: 0.45;
+	}
+
+	.trail {
+		stroke: var(--faint);
+		stroke-width: 1.3;
+		stroke-dasharray: 1 9;
+		stroke-linecap: round;
+		opacity: 0.4;
+	}
+
+	.fan {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		perspective: 1200px;
+	}
+
+	.polaroid {
+		position: relative;
+		margin: 0;
+		background: var(--polaroid-bg);
+		padding: 0.45rem 0.45rem 1rem;
+		border-radius: 3px;
+		box-shadow: 0 14px 32px -16px var(--polaroid-shadow);
+		width: clamp(6.5rem, 12vw, 8.5rem);
+		transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+		cursor: pointer;
+	}
+
+	.polaroid img {
+		width: 100%;
+		aspect-ratio: 3 / 4;
+		object-fit: cover;
+		border-radius: 1px;
+	}
+
+	.polaroid:hover {
+		transform: translateY(-10px) rotate(0deg) scale(1.03) !important;
+		z-index: 5;
+	}
+
+	/* Hover label pill overlaid on the photo. */
+	.tip {
+		position: absolute;
+		left: 50%;
+		top: 42%;
+		transform: translate(-50%, -50%);
+		z-index: 2;
+		white-space: nowrap;
+		background: rgba(255, 255, 255, 0.92);
+		color: #17171a;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		letter-spacing: -0.01em;
+		padding: 0.35rem 0.75rem;
+		border-radius: 999px;
+		box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+		-webkit-backdrop-filter: blur(4px);
+		backdrop-filter: blur(4px);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.caption {
+		margin: 3rem 0 0;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+
+	.caption .time {
+		color: var(--text);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* No-JS / reduced-motion fallback: reveal the label on hover via CSS. */
+	html:not(.js) .polaroid:hover .tip,
+	html.reduce-motion .polaroid:hover .tip {
+		opacity: 1;
+	}
+
+	@media (max-width: 560px) {
+		.fan {
+			gap: 0.4rem;
+		}
+		.polaroid {
+			width: clamp(5.5rem, 27vw, 7rem);
+		}
+	}
+</style>

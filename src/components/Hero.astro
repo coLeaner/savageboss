@@ -1,0 +1,62 @@
+---
+// Closing statement: stacked highlighter boxes "Boss" over "Sheriff",
+// placed under the photos. Wipes in on scroll (see index.astro script).
+---
+
+<section class="hero-section">
+	<div class="wrap">
+		<h2 class="hero" aria-label="Boss Sheriff">
+			<span class="tag tag--boss" data-tag>Boss</span>
+			<span class="tag tag--sheriff" data-tag>Sheriff</span>
+		</h2>
+	</div>
+</section>
+
+<style>
+	.hero-section {
+		margin-bottom: clamp(4rem, 12vh, 8rem);
+	}
+
+	.wrap {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+
+	.hero {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		line-height: 0.92;
+	}
+
+	.tag {
+		display: inline-block;
+		font-weight: 800;
+		font-size: clamp(2.25rem, 9vw, 5rem);
+		letter-spacing: -0.035em;
+		color: #141414;
+		padding: 0.06em 0.26em;
+		border-radius: 10px;
+		will-change: transform, clip-path;
+	}
+
+	.tag--boss {
+		background: #f3b5e5;
+		position: relative;
+		z-index: 1;
+	}
+
+	.tag--sheriff {
+		background: #f5921f;
+		margin-left: 0.55em;
+		margin-top: -0.04em;
+		position: relative;
+		z-index: 2;
+	}
+
+	/* Hidden reveal state — only when we can animate it (no flash otherwise). */
+	html.js:not(.reduce-motion) .tag {
+		clip-path: inset(0 100% 0 0);
+	}
+</style>

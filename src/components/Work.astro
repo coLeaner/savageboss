@@ -1,0 +1,135 @@
+---
+// Year-grouped work list, styled like the reference: year | title (+ tag) | category.
+const groups = [
+	{
+		year: '2025 — Now',
+		items: [
+			{ title: 'Custom web design solutions', tag: 'Building', category: 'Web design' },
+			{ title: 'Websites for institutions', category: 'Freelance' },
+			{ title: 'Inventory management web app', tag: 'New', category: 'Product' },
+			{ title: 'Data & inventory, MAS Pharmacy', category: 'Operations' },
+		],
+	},
+	{
+		year: '2022 — 26',
+		items: [
+			{ title: 'BSc Information Technology, BlueCrest University College', category: 'Education' },
+		],
+	},
+];
+---
+
+<section class="work">
+	<h2 class="heading" data-anim="fade">Work</h2>
+
+	<div class="table">
+		{
+			groups.map((group) => (
+				<div class="group">
+					{group.items.map((item, i) => (
+						<div class="rowline" data-anim="row">
+							<span class="year">{i === 0 ? group.year : ''}</span>
+							<span class="title">
+								{item.title}
+								{item.tag && (
+									<span class:list={['tag', item.tag.toLowerCase()]}>{item.tag}</span>
+								)}
+							</span>
+							<span class="category">{item.category}</span>
+						</div>
+					))}
+				</div>
+			))
+		}
+	</div>
+</section>
+
+<style>
+	.work {
+		margin-top: clamp(2.5rem, 6vh, 4rem);
+	}
+
+	.heading {
+		margin: 0 0 1.75rem;
+		padding-top: 1.75rem;
+		border-top: 1px solid var(--line);
+		font-size: 0.9375rem;
+		font-weight: 400;
+		color: var(--muted);
+	}
+
+	.group + .group .rowline:first-child {
+		border-top: 1px solid var(--line);
+	}
+
+	.rowline {
+		display: grid;
+		grid-template-columns: 6rem 1fr auto;
+		gap: 1rem;
+		align-items: baseline;
+		padding: 0.85rem 0;
+		cursor: default;
+	}
+
+	.rowline .title,
+	.rowline .category {
+		transition: color 0.3s ease;
+	}
+
+	.rowline:hover .title,
+	.rowline:hover .category {
+		color: var(--accent);
+	}
+
+	.year {
+		color: var(--faint);
+		font-size: 0.9375rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.title {
+		color: var(--text);
+		display: inline-flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+
+	.category {
+		color: var(--muted);
+		font-size: 0.9375rem;
+		text-align: right;
+	}
+
+	.tag {
+		font-size: 0.75rem;
+		line-height: 1;
+		padding: 0.28em 0.5em;
+		border-radius: 5px;
+		font-weight: 500;
+		letter-spacing: 0.01em;
+	}
+
+	.tag.building {
+		color: var(--tag-building-fg);
+		background: var(--tag-building-bg);
+	}
+
+	.tag.new {
+		color: var(--tag-new-fg);
+		background: var(--tag-new-bg);
+	}
+
+	@media (max-width: 640px) {
+		.rowline {
+			grid-template-columns: 4.5rem 1fr;
+			row-gap: 0.15rem;
+		}
+
+		.category {
+			grid-column: 2;
+			text-align: left;
+			color: var(--faint);
+		}
+	}
+</style>

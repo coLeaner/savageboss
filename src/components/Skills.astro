@@ -1,0 +1,66 @@
+---
+// Skills as a simple, minimal row of outlined cards.
+const skills = [
+	'UX/UI',
+	'HTML',
+	'CSS',
+	'JavaScript',
+	'React',
+	'Next.js',
+	'Problem-solving',
+	'Creativity',
+	'Communication',
+	'Time management',
+];
+---
+
+<section class="skills" aria-label="Skills">
+	<p class="label" data-anim="fade">Toolkit</p>
+
+	<div class="grid">
+		{
+			skills.map((s) => (
+				<article class="card" data-card data-anim="cards">
+					<span class="name">{s}</span>
+				</article>
+			))
+		}
+	</div>
+</section>
+
+<style>
+	.skills {
+		margin-top: clamp(3.5rem, 9vh, 5.5rem);
+	}
+
+	.label {
+		margin: 0 0 1.5rem;
+		font-size: 0.9375rem;
+		color: var(--muted);
+	}
+
+	/* Just the words — a wrapping row, no boxes. */
+	.grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem 1.5rem;
+	}
+
+	.card {
+		display: inline-flex;
+		cursor: default;
+	}
+
+	.name {
+		font-size: 1rem;
+		font-weight: 500;
+		letter-spacing: -0.01em;
+		color: var(--muted);
+		white-space: nowrap;
+		transition: color 0.3s ease;
+	}
+
+	.card:hover .name {
+		color: var(--accent);
+	}
+</style>

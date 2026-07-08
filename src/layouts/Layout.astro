@@ -1,23 +1,251 @@
+---
+import '@fontsource-variable/inter';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Abraham A. Sheriff — Web Developer',
+	description = 'Abraham A. Sheriff is a web developer based in Paynesville City, Liberia, building simple, user-friendly digital solutions.',
+} = Astro.props;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta name="twitter:card" content="summary" />
+		<script is:inline>
+			// Runs before paint: flag JS + reduced-motion so CSS can hide
+			// animated elements only when we can actually animate them.
+			(function () {
+				var d = document.documentElement;
+				d.classList.add('js');
+				try {
+					if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+						d.classList.add('reduce-motion');
+					}
+					var stored = localStorage.getItem('theme');
+					if (stored === 'light' || stored === 'dark') {
+						d.setAttribute('data-theme', stored);
+					}
+				} catch (e) {}
+			})();
+		</script>
 	</head>
 	<body>
+		<button id="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle theme">
+			<svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="12" cy="12" r="4"></circle>
+				<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+			</svg>
+			<svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+			</svg>
+		</button>
 		<slot />
+
+		<script is:inline>
+			(function () {
+				var d = document.documentElement;
+				var btn = document.getElementById('theme-toggle');
+				if (!btn) return;
+				function current() {
+					var attr = d.getAttribute('data-theme');
+					if (attr) return attr;
+					return window.matchMedia('(prefers-color-scheme: light)').matches
+						? 'light'
+						: 'dark';
+				}
+				btn.addEventListener('click', function () {
+					var next = current() === 'dark' ? 'light' : 'dark';
+					d.setAttribute('data-theme', next);
+					try {
+						localStorage.setItem('theme', next);
+					} catch (e) {}
+				});
+			})();
+		</script>
 	</body>
 </html>
 
-<style>
-	html,
+<style is:global>
+	:root {
+		--content: 44rem;
+		--gutter: clamp(1.25rem, 5vw, 2rem);
+	}
+
+	/* Dark palette — the default, and whenever the user picks dark. */
+	:root,
+	:root[data-theme='dark'] {
+		--bg: #0e0e10;
+		--text: #ecEae4;
+		--muted: #8a8880;
+		--faint: #56554f;
+		--line: rgba(236, 234, 228, 0.1);
+		--tag-building-fg: #8ab4ff;
+		--tag-building-bg: rgba(138, 180, 255, 0.14);
+		--tag-new-fg: #f5b56b;
+		--tag-new-bg: rgba(245, 181, 107, 0.14);
+		--accent: #8ab4ff;
+		--polaroid-bg: #f6f5f1;
+		--polaroid-shadow: rgba(0, 0, 0, 0.7);
+		color-scheme: dark;
+	}
+
+	/* Light palette — a warm off-white, editorial like the reference. */
+	:root[data-theme='light'] {
+		--bg: #f4f3ee;
+		--text: #17171a;
+		--muted: #6f6e67;
+		--faint: #a6a49c;
+		--line: rgba(20, 20, 20, 0.12);
+		--tag-building-fg: #2f6fed;
+		--tag-building-bg: rgba(47, 111, 237, 0.12);
+		--tag-new-fg: #b45e0c;
+		--tag-new-bg: rgba(180, 94, 12, 0.12);
+		--accent: #2f6fed;
+		--polaroid-bg: #ffffff;
+		--polaroid-shadow: rgba(0, 0, 0, 0.28);
+		color-scheme: light;
+	}
+
+	/* Follow the OS when the visitor hasn't chosen explicitly. */
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme]) {
+			--bg: #f4f3ee;
+			--text: #17171a;
+			--muted: #6f6e67;
+			--faint: #a6a49c;
+			--line: rgba(20, 20, 20, 0.12);
+			--tag-building-fg: #2f6fed;
+			--tag-building-bg: rgba(47, 111, 237, 0.12);
+			--tag-new-fg: #b45e0c;
+			--tag-new-bg: rgba(180, 94, 12, 0.12);
+			--accent: #2f6fed;
+			--polaroid-bg: #ffffff;
+			--polaroid-shadow: rgba(0, 0, 0, 0.28);
+			color-scheme: light;
+		}
+	}
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	html {
+		-webkit-text-size-adjust: 100%;
+	}
+
 	body {
 		margin: 0;
-		width: 100%;
-		height: 100%;
+		background: var(--bg);
+		color: var(--text);
+		font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
+		font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
+		line-height: 1.65;
+		letter-spacing: -0.006em;
+		font-feature-settings: 'cv11', 'ss01';
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+		overflow-x: hidden;
+		transition: background-color 0.45s ease, color 0.45s ease;
+	}
+
+	img {
+		max-width: 100%;
+		display: block;
+	}
+
+	#theme-toggle {
+		position: fixed;
+		top: clamp(1rem, 3vw, 1.75rem);
+		right: clamp(1rem, 3vw, 1.75rem);
+		z-index: 50;
+		width: 2.5rem;
+		height: 2.5rem;
+		display: grid;
+		place-items: center;
+		padding: 0;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--bg) 70%, transparent);
+		color: var(--muted);
+		cursor: pointer;
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
+		transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+	}
+
+	#theme-toggle:hover {
+		color: var(--text);
+		border-color: var(--faint);
+		transform: rotate(15deg);
+	}
+
+	#theme-toggle svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.7;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	#theme-toggle .i-moon {
+		display: none;
+	}
+
+	:root[data-theme='light'] #theme-toggle .i-sun {
+		display: none;
+	}
+	:root[data-theme='light'] #theme-toggle .i-moon {
+		display: block;
+	}
+
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme]) #theme-toggle .i-sun {
+			display: none;
+		}
+		:root:not([data-theme]) #theme-toggle .i-moon {
+			display: block;
+		}
+	}
+
+	a {
+		color: inherit;
+	}
+
+	::selection {
+		background: var(--text);
+		color: var(--bg);
+	}
+
+	/* Animated elements start hidden ONLY when JS is on and motion is allowed,
+	   so GSAP can reveal them without a flash. No-JS / reduce-motion = visible. */
+	html.js:not(.reduce-motion) [data-anim],
+	html.js:not(.reduce-motion) [data-fan] {
+		opacity: 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		* {
+			animation-duration: 0.001ms !important;
+			transition-duration: 0.001ms !important;
+		}
 	}
 </style>

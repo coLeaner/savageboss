@@ -1,0 +1,125 @@
+---
+// Intro: name, "updated" date, and three short paragraphs with inline links.
+// TODO(Abraham): replace the GitHub and LinkedIn "#" placeholders with your real URLs.
+const email = 'abrahamasheriff6@gmail.com';
+const portfolio = 'https://abesboss.netlify.app';
+const github = '#';
+const linkedin = '#';
+---
+
+<header class="intro">
+	<h1 class="name" data-anim="fade">Abraham A. Sheriff</h1>
+	<p class="updated" data-anim="fade">Web Developer · Updated 8 Jul 2026</p>
+
+	<div class="body">
+		<p data-anim="lines">
+			I'm a web developer based in Paynesville City, Liberia. I build simple,
+			user-friendly digital solutions the kind that quietly help a business keep
+			track of what matters.
+		</p>
+		<p data-anim="lines">
+			I'm finishing a BSc in Information Technology at <span class="hl">BlueCrest
+			University College</span>, and I work in UX/UI, HTML, CSS, JavaScript,
+			React and Next.js. Right now I'm building an inventory-management web app
+			and handling data at MAS Pharmacy.
+		</p>
+		<p class="say-hi" data-anim="fade">
+			Say hi on{' '}
+			<a class="brushlink" href={github} target="_blank" rel="noopener">GitHub</a>,{' '}
+			<a class="brushlink" href={linkedin} target="_blank" rel="noopener">LinkedIn</a>, my{' '}
+			<a class="brushlink" href={portfolio} target="_blank" rel="noopener">portfolio</a>, or{' '}
+			<a id="copy-email" class="brushlink" href={`mailto:${email}`} data-email={email} aria-label="Copy email address"><span class="label">email</span></a>{' '}
+			if you want to talk.
+		</p>
+	</div>
+</header>
+
+<style>
+	.intro {
+		padding-top: clamp(4rem, 12vh, 8rem);
+	}
+
+	.name {
+		margin: 0;
+		font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
+		font-weight: 500;
+		letter-spacing: -0.02em;
+	}
+
+	.updated {
+		margin: 0.25rem 0 0;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+
+	.body {
+		margin-top: clamp(3rem, 8vh, 5rem);
+		display: flex;
+		flex-direction: column;
+		gap: 1.4em;
+		max-width: 34rem;
+	}
+
+	.body p {
+		margin: 0;
+	}
+
+	.hl {
+		color: var(--text);
+	}
+
+	.body a {
+		text-decoration: underline;
+		text-decoration-color: var(--faint);
+		text-underline-offset: 3px;
+		transition: text-decoration-color 0.25s ease;
+	}
+
+	.body a:hover {
+		text-decoration-color: var(--text);
+	}
+
+	/* Paint-brush links: a brush stroke sweeps in behind the text on hover.
+	   --paint (0 → 1) is driven by GSAP; CSS is the reduced-motion fallback. */
+	.brushlink {
+		--paint: 0;
+		position: relative;
+		display: inline-block;
+		isolation: isolate;
+	}
+
+	.brushlink::before {
+		content: '';
+		position: absolute;
+		left: -0.18em;
+		right: -0.18em;
+		bottom: -0.05em;
+		height: 0.62em;
+		z-index: -1;
+		background: var(--accent);
+		opacity: 0.85;
+		-webkit-mask: url('/brush.svg') no-repeat center / 100% 100%;
+		mask: url('/brush.svg') no-repeat center / 100% 100%;
+		transform: scaleX(var(--paint));
+		transform-origin: left center;
+		pointer-events: none;
+	}
+
+	html:not(.js) .brushlink:hover,
+	html.reduce-motion .brushlink:hover {
+		--paint: 1;
+	}
+
+	/* Copy-email link: clip the label so it can slide vertically on copy. */
+	#copy-email {
+		display: inline-flex;
+		overflow: hidden;
+		vertical-align: bottom;
+		line-height: 1.65;
+	}
+
+	#copy-email .label {
+		display: inline-block;
+		will-change: transform, opacity;
+	}
+</style>
