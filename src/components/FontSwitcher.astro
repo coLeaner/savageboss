@@ -1,0 +1,220 @@
+---
+// Custom dropdown at the bottom to switch the page font (Inter ⇄ JetBrains Mono).
+const fonts = [
+	{ value: 'sans', label: 'Inter' },
+	{ value: 'mono', label: 'JetBrains Mono' },
+];
+---
+
+<div class="font-switch">
+	<span class="fs-label">Font</span>
+
+	<div class="fs" data-fs>
+		<button
+			type="button"
+			class="fs-btn"
+			data-fs-btn
+			aria-haspopup="listbox"
+			aria-expanded="false"
+		>
+			<span data-fs-current>Inter</span>
+			<svg class="caret" viewBox="0 0 12 8" aria-hidden="true">
+				<path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+			</svg>
+		</button>
+
+		<ul class="fs-menu" role="listbox" aria-label="Font" data-fs-menu>
+			{
+				fonts.map((f) => (
+					<li class="fs-opt" role="option" tabindex="-1" data-value={f.value} aria-selected="false">
+						{f.label}
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</div>
+
+<script is:inline>
+	(function () {
+		var root = document.querySelector('[data-fs]');
+		if (!root) return;
+		var d = document.documentElement;
+		var btn = root.querySelector('[data-fs-btn]');
+		var menu = root.querySelector('[data-fs-menu]');
+		var current = root.querySelector('[data-fs-current]');
+		var opts = Array.prototype.slice.call(root.querySelectorAll('.fs-opt'));
+
+		function labelFor(v) {
+			var o = opts.find(function (x) {
+				return x.getAttribute('data-value') === v;
+			});
+			return o ? o.textContent.trim() : 'Inter';
+		}
+
+		function sync(v) {
+			if (v === 'mono') d.setAttribute('data-font', 'mono');
+			else d.removeAttribute('data-font');
+			current.textContent = labelFor(v);
+			opts.forEach(function (o) {
+				o.setAttribute('aria-selected', o.getAttribute('data-value') === v ? 'true' : 'false');
+			});
+		}
+
+		function open() {
+			root.classList.add('open');
+			btn.setAttribute('aria-expanded', 'true');
+			var sel = opts.find(function (o) {
+				return o.getAttribute('aria-selected') === 'true';
+			});
+			(sel || opts[0]).focus();
+		}
+		function close(focusBtn) {
+			root.classList.remove('open');
+			btn.setAttribute('aria-expanded', 'false');
+			if (focusBtn) btn.focus();
+		}
+		function isOpen() {
+			return root.classList.contains('open');
+		}
+
+		function choose(v) {
+			sync(v);
+			try {
+				localStorage.setItem('font', v);
+			} catch (e) {}
+			close(true);
+		}
+
+		btn.addEventListener('click', function () {
+			isOpen() ? close(false) : open();
+		});
+
+		opts.forEach(function (o, i) {
+			o.addEventListener('click', function () {
+				choose(o.getAttribute('data-value'));
+			});
+			o.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					choose(o.getAttribute('data-value'));
+				} else if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					(opts[i + 1] || opts[0]).focus();
+				} else if (e.key === 'ArrowUp') {
+					e.preventDefault();
+					(opts[i - 1] || opts[opts.length - 1]).focus();
+				} else if (e.key === 'Escape') {
+					close(true);
+				}
+			});
+		});
+
+		btn.addEventListener('keydown', function (e) {
+			if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+				e.preventDefault();
+				open();
+			}
+		});
+
+		document.addEventListener('click', function (e) {
+			if (isOpen() && !root.contains(e.target)) close(false);
+		});
+
+		// Reflect whatever the pre-paint script already applied.
+		sync(d.getAttribute('data-font') === 'mono' ? 'mono' : 'sans');
+	})();
+</script>
+
+<style>
+	.font-switch {
+		max-width: var(--content);
+		margin: 0 auto clamp(3rem, 8vh, 5rem);
+		padding: 0 var(--gutter);
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		color: var(--muted);
+		font-size: 0.85rem;
+	}
+
+	.fs {
+		position: relative;
+	}
+
+	.fs-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		font: inherit;
+		color: var(--text);
+		background: transparent;
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 0.4rem 0.7rem;
+		cursor: pointer;
+		transition: border-color 0.25s ease;
+	}
+
+	.fs-btn:hover,
+	.fs-btn:focus-visible,
+	.fs.open .fs-btn {
+		border-color: var(--accent);
+		outline: none;
+	}
+
+	.caret {
+		width: 0.65rem;
+		height: 0.5rem;
+		color: var(--muted);
+		transition: transform 0.25s ease;
+	}
+	.fs.open .caret {
+		transform: rotate(180deg);
+	}
+
+	.fs-menu {
+		position: absolute;
+		bottom: calc(100% + 0.4rem);
+		left: 0;
+		min-width: 100%;
+		margin: 0;
+		padding: 0.3rem;
+		list-style: none;
+		background: var(--bg);
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.7);
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(6px);
+		transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+		z-index: 20;
+	}
+
+	.fs.open .fs-menu {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0);
+	}
+
+	.fs-opt {
+		white-space: nowrap;
+		padding: 0.45rem 0.6rem;
+		border-radius: 6px;
+		color: var(--muted);
+		cursor: pointer;
+		outline: none;
+		transition: background 0.18s ease, color 0.18s ease;
+	}
+
+	.fs-opt:hover,
+	.fs-opt:focus-visible {
+		background: color-mix(in srgb, var(--text) 8%, transparent);
+		color: var(--text);
+	}
+
+	.fs-opt[aria-selected='true'] {
+		color: var(--accent);
+	}
+</style>

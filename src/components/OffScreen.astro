@@ -1,12 +1,17 @@
 ---
 // "Off screen" — a fanned polaroid row of personal photos.
-// Images live in /public and are served from the site root.
-// TODO(Abraham): rename each `label` to describe what's actually in the photo.
+// Images live in /public and are served from the site root. The label (from the
+// file name) shows above each photo on hover. `src` is URL-encoded for spaces.
 const photos = [
-	{ src: '/Screenshot_20260626_140850_Instagram.jpg', label: 'a good day' },
-	{ src: '/Screenshot_20260630_175044_Instagram.jpg', label: 'night vibes' },
-	{ src: '/Screenshot_20260524_201442_Instagram(1).jpg', label: 'out exploring' },
-];
+	{ src: '/Screenshot_20260626_140850_Instagram.jpg', label: 'My cloud of fluff' },
+	{ src: '/mydwag!!!.jpg', label: 'My dwag!!!' },
+	{ src: '/GOAT.jpg', label: 'The GOAT' },
+	{ src: '/Reddevil.jpg', label: 'Red Devil' },
+	{ src: '/Where i live.jpg', label: 'Where I live' },
+	{ src: '/Fav meme.jpg', label: 'Fav meme' },
+	{ src: '/Screenshot_20260630_175044_Instagram.jpg', label: 'Night vibes' },
+	{ src: '/Screenshot_20260524_201442_Instagram(1).jpg', label: 'Out exploring' },
+].map((p) => ({ ...p, src: encodeURI(p.src) }));
 ---
 
 <section class="offscreen">
@@ -97,11 +102,8 @@ const photos = [
 	}
 
 	.trail {
-		stroke: var(--faint);
-		stroke-width: 1.3;
-		stroke-dasharray: 1 9;
-		stroke-linecap: round;
-		opacity: 0.4;
+		fill: none;
+		stroke: none;
 	}
 
 	.fan {
@@ -109,19 +111,19 @@ const photos = [
 		justify-content: center;
 		align-items: flex-start;
 		flex-wrap: wrap;
-		gap: 0.6rem;
+		gap: 0;
 		perspective: 1200px;
 	}
 
 	.polaroid {
 		position: relative;
-		margin: 0;
+		margin: 0 -1.75rem;
 		background: var(--polaroid-bg);
 		padding: 0.45rem 0.45rem 1rem;
 		border-radius: 3px;
-		box-shadow: 0 14px 32px -16px var(--polaroid-shadow);
-		width: clamp(6.5rem, 12vw, 8.5rem);
-		transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+		box-shadow: 0 16px 34px -16px var(--polaroid-shadow);
+		width: clamp(7rem, 13vw, 9.5rem);
+		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
 		cursor: pointer;
 	}
 
@@ -132,29 +134,35 @@ const photos = [
 		border-radius: 1px;
 	}
 
+	/* Hovered photo straightens, lifts and grows to the front. */
 	.polaroid:hover {
-		transform: translateY(-10px) rotate(0deg) scale(1.03) !important;
+		transform: translateY(-22px) rotate(0deg) scale(1.18) !important;
 		z-index: 5;
 	}
 
-	/* Hover label pill overlaid on the photo. */
+	/* Dim the other photos so the hovered one stands out. */
+	.fan:hover .polaroid:not(:hover) {
+		opacity: 0.55;
+	}
+
+	/* Hover label pill floating above the photo. */
 	.tip {
 		position: absolute;
-		left: 50%;
-		top: 42%;
-		transform: translate(-50%, -50%);
-		z-index: 2;
+		left: 0.3rem;
+		bottom: calc(100% + 0.75rem);
+		z-index: 6;
+		min-height: 1.9em;
+		display: inline-flex;
+		align-items: center;
 		white-space: nowrap;
-		background: rgba(255, 255, 255, 0.92);
+		background: #ffffff;
 		color: #17171a;
 		font-size: 0.8125rem;
-		font-weight: 500;
+		font-weight: 600;
 		letter-spacing: -0.01em;
 		padding: 0.35rem 0.75rem;
 		border-radius: 999px;
-		box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.6);
-		-webkit-backdrop-filter: blur(4px);
-		backdrop-filter: blur(4px);
+		box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.55);
 		opacity: 0;
 		pointer-events: none;
 	}
@@ -177,11 +185,43 @@ const photos = [
 	}
 
 	@media (max-width: 560px) {
-		.fan {
-			gap: 0.4rem;
+		.heading {
+			margin-bottom: 1.75rem;
 		}
+
+		/* Keep all photos on a single arc — never let the fan wrap into
+		   two broken rows. Tighter width + deeper overlap so 8 fit a phone. */
+		.fan {
+			flex-wrap: nowrap;
+		}
+
 		.polaroid {
-			width: clamp(5.5rem, 27vw, 7rem);
+			width: clamp(4.5rem, 20vw, 6rem);
+			margin: 0 -1.55rem;
+			padding: 0.35rem 0.35rem 0.8rem;
+		}
+
+		/* Hover isn't a thing on touch — soften the zoom so a tapped photo
+		   doesn't blow past the screen edge. */
+		.polaroid:hover {
+			transform: translateY(-14px) rotate(0deg) scale(1.1) !important;
+		}
+
+		.tip {
+			font-size: 0.75rem;
+			padding: 0.3rem 0.6rem;
+		}
+
+		.caption {
+			margin-top: 2.25rem;
+		}
+	}
+
+	/* Very narrow phones: shrink the plane's breathing room isn't needed,
+	   but pull the fan in a touch more so it clears the gutters. */
+	@media (max-width: 380px) {
+		.polaroid {
+			margin: 0 -1.7rem;
 		}
 	}
 </style>

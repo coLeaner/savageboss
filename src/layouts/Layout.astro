@@ -1,5 +1,6 @@
 ---
 import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
 
 interface Props {
 	title?: string;
@@ -39,6 +40,9 @@ const {
 					var stored = localStorage.getItem('theme');
 					if (stored === 'light' || stored === 'dark') {
 						d.setAttribute('data-theme', stored);
+					}
+					if (localStorage.getItem('font') === 'mono') {
+						d.setAttribute('data-font', 'mono');
 					}
 				} catch (e) {}
 			})();
@@ -84,6 +88,13 @@ const {
 	:root {
 		--content: 44rem;
 		--gutter: clamp(1.25rem, 5vw, 2rem);
+		--font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+		--font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+		--font: var(--font-sans);
+	}
+
+	:root[data-font='mono'] {
+		--font: var(--font-mono);
 	}
 
 	/* Dark palette — the default, and whenever the user picks dark. */
@@ -154,7 +165,7 @@ const {
 		margin: 0;
 		background: var(--bg);
 		color: var(--text);
-		font-family: 'Inter Variable', system-ui, -apple-system, sans-serif;
+		font-family: var(--font);
 		font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
 		line-height: 1.65;
 		letter-spacing: -0.006em;

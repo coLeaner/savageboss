@@ -5,6 +5,8 @@ import Skills from '../components/Skills.astro';
 import Work from '../components/Work.astro';
 import OffScreen from '../components/OffScreen.astro';
 import Hero from '../components/Hero.astro';
+import Trex from '../components/Trex.astro';
+import FontSwitcher from '../components/FontSwitcher.astro';
 ---
 
 <Layout>
@@ -17,7 +19,9 @@ import Hero from '../components/Hero.astro';
 		<!-- Polaroid row breaks out wider than the reading column -->
 		<OffScreen />
 		<Hero />
+		<FontSwitcher />
 	</main>
+	<Trex />
 </Layout>
 
 <style>
@@ -139,24 +143,18 @@ import Hero from '../components/Hero.astro';
 				);
 			});
 
-			// --- "Say hi" links: paint-brush stroke sweeps in on hover ---
+			// --- "Say hi" links: brush stays visible, re-strokes + lifts on hover ---
 			gsap.utils.toArray<HTMLElement>('.brushlink').forEach((link) => {
-				gsap.set(link, { '--paint': 0 });
-				link.addEventListener('mouseenter', () =>
-					gsap.to(link, {
-						'--paint': 1,
-						y: -2,
-						duration: 0.5,
-						ease: 'power2.out',
-					})
-				);
+				link.addEventListener('mouseenter', () => {
+					gsap.fromTo(
+						link,
+						{ '--paint': 0 },
+						{ '--paint': 1, duration: 0.45, ease: 'power2.out', overwrite: 'auto' }
+					);
+					gsap.to(link, { y: -2, duration: 0.35, ease: 'power2.out' });
+				});
 				link.addEventListener('mouseleave', () =>
-					gsap.to(link, {
-						'--paint': 0,
-						y: 0,
-						duration: 0.3,
-						ease: 'power2.in',
-					})
+					gsap.to(link, { '--paint': 1, y: 0, duration: 0.25, ease: 'power2.in' })
 				);
 			});
 
@@ -182,90 +180,247 @@ import Hero from '../components/Hero.astro';
 			if (fan && polaroids.length) {
 				gsap.set(fan, { opacity: 1 });
 				const mid = (polaroids.length - 1) / 2;
+				// Spread the whole fan across a fixed ~34° arc regardless of count.
+				const step = polaroids.length > 1 ? 34 / (polaroids.length - 1) : 0;
 
 				polaroids.forEach((card, i) => {
 					const offset = i - mid;
 					gsap.set(card, {
 						rotate: 0,
-						x: -offset * 40,
-						y: 30,
+						x: -offset * 45,
+						y: 40,
 						opacity: 0,
 						transformOrigin: 'bottom center',
 					});
-					// resting fanned angle
-					card.style.setProperty('--rest', `${offset * 6}deg`);
 				});
 
 				gsap.to(polaroids, {
-					rotate: (i) => (i - mid) * 6,
+					rotate: (i) => (i - mid) * step,
+					y: (i) => Math.abs(i - mid) * 6,
 					x: 0,
-					y: 0,
 					opacity: 1,
 					duration: 1,
 					ease: 'power3.out',
-					stagger: 0.09,
+					stagger: 0.07,
 					scrollTrigger: { trigger: fan, start: 'top 82%' },
-					onComplete: () =>
-						polaroids.forEach((c) => {
-							// hand rotation back to CSS so :hover can override it
-							c.style.transform = `rotate(var(--rest))`;
-						}),
 				});
 
 				// Hover label pill: pop up above each polaroid.
 				polaroids.forEach((card) => {
 					const tip = card.querySelector<HTMLElement>('.tip');
 					if (!tip) return;
+					const full = tip.textContent ?? '';
+					let typeTimer: ReturnType<typeof setInterval>;
 					gsap.set(tip, {
-						xPercent: -50,
-						yPercent: -50,
-						y: 8,
+						y: 12,
 						scale: 0.9,
 						opacity: 0,
-						transformOrigin: '50% 50%',
+						transformOrigin: 'left bottom',
 					});
-					card.addEventListener('mouseenter', () =>
+
+					const typewrite = () => {
+						clearInterval(typeTimer);
+						let i = 0;
+						tip.textContent = '';
+						typeTimer = setInterval(() => {
+							i++;
+							tip.textContent = full.slice(0, i) + (i < full.length ? '|' : '');
+							if (i >= full.length) clearInterval(typeTimer);
+						}, 45);
+					};
+
+					card.addEventListener('mouseenter', () => {
 						gsap.to(tip, {
 							y: 0,
 							scale: 1,
 							opacity: 1,
 							duration: 0.35,
 							ease: 'back.out(2.2)',
-						})
-					);
-					card.addEventListener('mouseleave', () =>
+						});
+						typewrite();
+					});
+					card.addEventListener('mouseleave', () => {
+						clearInterval(typeTimer);
 						gsap.to(tip, {
-							y: 8,
+							y: 12,
 							scale: 0.9,
 							opacity: 0,
 							duration: 0.25,
 							ease: 'power2.in',
-						})
-					);
+							onComplete: () => (tip.textContent = full),
+						});
+					});
 				});
 			}
 
-			// --- MotionPath: a paper plane endlessly loops over the photos ---
+			// --- MotionPath: a paper plane orbits around ALL the photos ---
+			const flightSvg = document.querySelector('.flight');
 			const plane = document.querySelector('#plane');
-			if (plane) {
+			const pathEl = document.querySelector('#flightPath');
+			let flightTween = null;
+
+			const buildFlight = () => {
+				if (!flightSvg || !plane || !pathEl || !polaroids.length) return;
+				const W = flightSvg.clientWidth;
+				const H = flightSvg.clientHeight;
+				if (!W || !H) return;
+				flightSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+				// Measure the photo cluster via layout boxes (ignores GSAP transforms).
+				let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+				polaroids.forEach((c) => {
+					minX = Math.min(minX, c.offsetLeft);
+					maxX = Math.max(maxX, c.offsetLeft + c.offsetWidth);
+					minY = Math.min(minY, c.offsetTop);
+					maxY = Math.max(maxY, c.offsetTop + c.offsetHeight);
+				});
+				const cx = (minX + maxX) / 2;
+				const cy = (minY + maxY) / 2;
+				const rx = (maxX - minX) / 2 + 28;
+				const ry = (maxY - minY) / 2 + 22;
+				const k = 0.5523;
+				const ox = rx * k;
+				const oy = ry * k;
+				const d =
+					`M ${cx - rx},${cy} ` +
+					`C ${cx - rx},${cy - oy} ${cx - ox},${cy - ry} ${cx},${cy - ry} ` +
+					`C ${cx + ox},${cy - ry} ${cx + rx},${cy - oy} ${cx + rx},${cy} ` +
+					`C ${cx + rx},${cy + oy} ${cx + ox},${cy + ry} ${cx},${cy + ry} ` +
+					`C ${cx - ox},${cy + ry} ${cx - rx},${cy + oy} ${cx - rx},${cy} Z`;
+				pathEl.setAttribute('d', d);
+				if (flightTween) flightTween.kill();
 				gsap.set(plane, { opacity: 0 });
-				gsap.to(plane, {
-					duration: 17,
+				flightTween = gsap.to(plane, {
+					duration: 20,
 					repeat: -1,
 					ease: 'none',
-					motionPath: {
-						path: '#flightPath',
-						align: '#flightPath',
-						alignOrigin: [0.5, 0.5],
-						autoRotate: true,
-					},
+					motionPath: { path: pathEl, align: pathEl, alignOrigin: [0.5, 0.5], autoRotate: true },
 				});
-				// fade the plane in once it's placed on the path
 				gsap.to(plane, { opacity: 1, duration: 0.6, delay: 0.1, ease: 'power1.out' });
-			}
+			};
+
+			buildFlight();
+			let flightResize;
+			window.addEventListener('resize', () => {
+				clearTimeout(flightResize);
+				flightResize = setTimeout(buildFlight, 200);
+			});
 
 			ScrollTrigger.refresh();
 		});
+	}
+
+	// --- T-Rex greeter: greets, and gets angry if you keep poking it ---
+	const greeter = document.querySelector<HTMLElement>('[data-greeter]');
+	if (greeter) {
+		const trex = greeter.querySelector<HTMLElement>('.trex');
+		const bubble = greeter.querySelector<HTMLElement>('[data-bubble]');
+
+		if (trex && bubble) {
+			const friendly = "Hi, I'm Boss";
+			const pokes = ['Hey!', 'Quit it.', "I'm warning you…"];
+			const angry = 'APEX PREDATOR! 🦖';
+			let clicks = 0;
+			let calmTimer: ReturnType<typeof setTimeout>;
+
+			// Colour shifts one step warmer on every poke, up to angry red.
+			const skins = trex.querySelectorAll<SVGElement>('.skin');
+			const belly = trex.querySelector<SVGElement>('.belly');
+			const spikes = trex.querySelectorAll<SVGElement>('.spike');
+			const levels = [
+				null, // 0: default green (from CSS)
+				{ s: '#8fbf3f', b: '#c3e07f', k: '#78a52f' }, // lime
+				{ s: '#e0b52e', b: '#f2d98a', k: '#c19620' }, // amber
+				{ s: '#e8792a', b: '#f4b184', k: '#c25f18' }, // orange
+				{ s: '#d83a2c', b: '#f2988c', k: '#b32819' }, // angry red
+			];
+			const paint = (level: number) => {
+				const c = levels[level];
+				skins.forEach((e) => (e.style.fill = c ? c.s : ''));
+				if (belly) belly.style.fill = c ? c.b : '';
+				spikes.forEach((e) => (e.style.fill = c ? c.k : ''));
+			};
+
+			const showBubble = () =>
+				reduced
+					? gsap.set(bubble, { scale: 1, opacity: 1 })
+					: gsap.to(bubble, { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(2)', overwrite: true });
+			const hideBubble = () =>
+				reduced
+					? gsap.set(bubble, { scale: 0, opacity: 0 })
+					: gsap.to(bubble, { scale: 0, opacity: 0, duration: 0.3, ease: 'back.in(2)', overwrite: true });
+
+			const calmDown = () => {
+				clicks = 0;
+				greeter.classList.remove('angry');
+				trex.classList.remove('angry');
+				paint(0);
+				bubble.textContent = friendly;
+			};
+
+			trex.addEventListener('click', () => {
+				clicks++;
+				clearTimeout(calmTimer);
+				paint(Math.min(clicks, 4));
+
+				if (clicks >= 4) {
+					greeter.classList.add('angry');
+					trex.classList.add('angry');
+					bubble.textContent = angry;
+					if (!reduced) {
+						gsap.fromTo(
+							trex,
+							{ rotation: -9 },
+							{
+								rotation: 9,
+								duration: 0.07,
+								repeat: 7,
+								yoyo: true,
+								ease: 'power1.inOut',
+								onComplete: () => gsap.to(trex, { rotation: 0, duration: 0.15 }),
+							}
+						);
+					}
+				} else {
+					bubble.textContent = pokes[Math.min(clicks - 1, pokes.length - 1)];
+					if (!reduced) gsap.fromTo(trex, { scale: 0.88 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' });
+				}
+
+				showBubble();
+				// Boss cools off after you leave him alone for a bit.
+				calmTimer = setTimeout(() => {
+					calmDown();
+					hideBubble();
+				}, 4500);
+			});
+
+			// Bubble reappears on hover, tucks away on leave.
+			greeter.addEventListener('mouseenter', showBubble);
+			greeter.addEventListener('mouseleave', hideBubble);
+
+			if (reduced) {
+				gsap.set(trex, { opacity: 1, y: 0 });
+				gsap.set(bubble, { opacity: 1, scale: 1, transformOrigin: '22% 100%' });
+			} else {
+				gsap.set(trex, { y: 70, opacity: 0 });
+				gsap.set(bubble, { scale: 0, opacity: 0, transformOrigin: '22% 100%' });
+
+				gsap
+					.timeline({ delay: 0.8 })
+					.to(trex, { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.7)' })
+					.to(bubble, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' }, '-=0.15')
+					.to(trex, { y: -6, duration: 1.1, ease: 'sine.inOut', repeat: -1, yoyo: true }, '+=0.15');
+
+				// Tuck the greeting away after a few seconds (only if not mid-poke).
+				gsap.to(bubble, {
+					scale: 0,
+					opacity: 0,
+					duration: 0.4,
+					ease: 'back.in(2)',
+					delay: 5,
+					overwrite: 'auto',
+				});
+			}
+		}
 	}
 
 	// --- Click-to-copy email (runs regardless of motion preference) ---

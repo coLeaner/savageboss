@@ -1,0 +1,155 @@
+---
+// A small T-Rex mascot fixed in the corner that greets visitors.
+// Animation lives in the page script (index.astro) via [data-greeter].
+---
+
+<div class="greeter" data-greeter aria-hidden="true">
+	<div class="bubble" data-bubble>Hi, I'm Boss</div>
+
+	<svg class="trex" viewBox="0 0 120 120" width="66" height="66" role="img" aria-label="A friendly dinosaur waving hello">
+		<!-- tail -->
+		<path class="skin" d="M6,84 L42,68 L42,90 Z"></path>
+		<!-- back leg -->
+		<rect class="skin" x="45" y="82" width="11" height="20" rx="5"></rect>
+		<!-- body -->
+		<rect class="skin" x="34" y="50" width="54" height="42" rx="20"></rect>
+		<!-- belly -->
+		<rect class="belly" x="45" y="66" width="34" height="24" rx="12"></rect>
+		<!-- back spikes -->
+		<path class="spike" d="M39,50 l7,-9 l7,9 z"></path>
+		<path class="spike" d="M53,48 l7,-9 l7,9 z"></path>
+		<path class="spike" d="M66,44 l6,-8 l6,8 z"></path>
+		<!-- front leg -->
+		<rect class="skin" x="68" y="82" width="11" height="20" rx="5"></rect>
+		<!-- tiny arm -->
+		<rect class="skin" x="66" y="58" width="14" height="6" rx="3" transform="rotate(18 73 61)"></rect>
+		<!-- head -->
+		<rect class="skin" x="64" y="28" width="44" height="36" rx="15"></rect>
+		<!-- mouth -->
+		<path class="mouth" d="M95,53 q6,4 12,0" fill="none"></path>
+		<!-- nostril -->
+		<circle class="mouth" cx="103" cy="38" r="1.7"></circle>
+		<!-- eye -->
+		<circle cx="92" cy="42" r="5.5" fill="#fff"></circle>
+		<circle class="pupil" cx="94" cy="42" r="2.6"></circle>
+	</svg>
+</div>
+
+<style>
+	.greeter {
+		position: fixed;
+		left: 1.25rem;
+		bottom: 1.25rem;
+		z-index: 60;
+		width: 66px;
+		pointer-events: none;
+	}
+
+	.trex,
+	.bubble {
+		pointer-events: auto;
+	}
+
+	.trex {
+		display: block;
+		overflow: visible;
+		cursor: pointer;
+		filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+	}
+
+	.skin {
+		fill: #5fae4e;
+		transition: fill 0.45s ease;
+	}
+	.belly {
+		fill: #8ccf7c;
+		transition: fill 0.45s ease;
+	}
+	.spike {
+		fill: #4c9440;
+		transition: fill 0.45s ease;
+	}
+	.mouth {
+		fill: #2f6b28;
+		stroke: #2f6b28;
+		stroke-width: 2;
+		stroke-linecap: round;
+		transition: fill 0.45s ease, stroke 0.45s ease;
+	}
+	.pupil {
+		fill: #1a1a1a;
+	}
+
+	/* Angry mode — repeated clicks turn Boss into an apex predator. */
+	.trex.angry .skin {
+		fill: #d83a2c;
+	}
+	.trex.angry .belly {
+		fill: #f2988c;
+	}
+	.trex.angry .spike {
+		fill: #b32819;
+	}
+	.trex.angry .mouth {
+		fill: #6f1810;
+		stroke: #6f1810;
+		transform: rotate(180deg);
+		transform-origin: 101px 52px;
+	}
+
+	.bubble {
+		position: absolute;
+		bottom: calc(100% + 12px);
+		left: -8px;
+		max-width: 190px;
+		line-height: 1.3;
+		background: var(--text);
+		color: var(--bg);
+		font-size: 0.85rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		padding: 0.45rem 0.75rem;
+		border-radius: 12px;
+		box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.6);
+		transition: background 0.4s ease, color 0.4s ease;
+	}
+
+	/* Bubble matches the mood when angry. */
+	.greeter.angry .bubble {
+		background: #d83a2c;
+		color: #fff;
+	}
+	.greeter.angry .bubble::after {
+		background: #d83a2c;
+	}
+
+	.bubble::after {
+		content: '';
+		position: absolute;
+		bottom: -4px;
+		left: 20px;
+		width: 10px;
+		height: 10px;
+		background: var(--text);
+		border-radius: 2px;
+		transform: rotate(45deg);
+	}
+
+	/* Hidden until GSAP reveals — only when we can animate (no flash). */
+	html.js:not(.reduce-motion) .trex,
+	html.js:not(.reduce-motion) .bubble {
+		opacity: 0;
+	}
+
+	@media (max-width: 560px) {
+		.greeter {
+			left: 0.85rem;
+			bottom: 0.85rem;
+			width: 54px;
+		}
+		.trex {
+			width: 54px;
+			height: 54px;
+		}
+	}
+</style>

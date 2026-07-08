@@ -3,7 +3,7 @@
 // TODO(Abraham): replace the GitHub and LinkedIn "#" placeholders with your real URLs.
 const email = 'abrahamasheriff6@gmail.com';
 const portfolio = 'https://abesboss.netlify.app';
-const github = '#';
+const github = 'https://github.com/coLeaner';
 const linkedin = '#';
 ---
 
@@ -13,23 +13,24 @@ const linkedin = '#';
 
 	<div class="body">
 		<p data-anim="lines">
-			I'm a web developer based in Paynesville City, Liberia. I build simple,
-			user-friendly digital solutions the kind that quietly help a business keep
-			track of what matters.
+			Ya, welcome-oh — I glad you reach! I'm a web developer right here in
+			Paynesville City, Liberia self. I build fine, easy-to-use web thing the
+			kind that quietly help business keep eye on wha matter.
 		</p>
 		<p data-anim="lines">
-			I'm finishing a BSc in Information Technology at <span class="hl">BlueCrest
-			University College</span>, and I work in UX/UI, HTML, CSS, JavaScript,
-			React and Next.js. Right now I'm building an inventory-management web app
-			and handling data at MAS Pharmacy.
+			I still da school small, finishing my BSc in Information Technology at <span
+				class="hl">BlueCrest University College</span>, and I know my way round
+			UX/UI, HTML, CSS, JavaScript, React and Next.js. Right now I building
+			mansastock, my own inventory app, and I handling the data them at MAS
+			Pharmacy.
 		</p>
 		<p class="say-hi" data-anim="fade">
-			Say hi on{' '}
-			<a class="brushlink" href={github} target="_blank" rel="noopener">GitHub</a>,{' '}
-			<a class="brushlink" href={linkedin} target="_blank" rel="noopener">LinkedIn</a>, my{' '}
-			<a class="brushlink" href={portfolio} target="_blank" rel="noopener">portfolio</a>, or{' '}
-			<a id="copy-email" class="brushlink" href={`mailto:${email}`} data-email={email} aria-label="Copy email address"><span class="label">email</span></a>{' '}
-			if you want to talk.
+			Come say ya hello on{' '}
+			<a class="brushlink brush-gh" href={github} target="_blank" rel="noopener">GitHub</a>,{' '}
+			<a class="brushlink brush-li" href={linkedin} target="_blank" rel="noopener">LinkedIn</a>, my{' '}
+			<a class="brushlink brush-pf" href={portfolio} target="_blank" rel="noopener">portfolio</a>, or{' '}
+			<a id="copy-email" class="brushlink brush-em" href={`mailto:${email}`} data-email={email} aria-label="Copy email address"><span class="label">email</span></a>{' '}
+			— make we talk, my paddy.
 		</p>
 	</div>
 </header>
@@ -82,10 +83,25 @@ const linkedin = '#';
 	/* Paint-brush links: a brush stroke sweeps in behind the text on hover.
 	   --paint (0 → 1) is driven by GSAP; CSS is the reduced-motion fallback. */
 	.brushlink {
-		--paint: 0;
+		--paint: 1;
+		--brush: var(--accent);
 		position: relative;
 		display: inline-block;
 		isolation: isolate;
+	}
+
+	/* Each link keeps its own brush colour. */
+	.brush-gh {
+		--brush: #a371f7;
+	}
+	.brush-li {
+		--brush: #2f80ed;
+	}
+	.brush-pf {
+		--brush: #f5a623;
+	}
+	.brush-em {
+		--brush: #10b981;
 	}
 
 	.brushlink::before {
@@ -96,18 +112,13 @@ const linkedin = '#';
 		bottom: -0.05em;
 		height: 0.62em;
 		z-index: -1;
-		background: var(--accent);
-		opacity: 0.85;
+		background: var(--brush);
+		opacity: 0.9;
 		-webkit-mask: url('/brush.svg') no-repeat center / 100% 100%;
 		mask: url('/brush.svg') no-repeat center / 100% 100%;
 		transform: scaleX(var(--paint));
 		transform-origin: left center;
 		pointer-events: none;
-	}
-
-	html:not(.js) .brushlink:hover,
-	html.reduce-motion .brushlink:hover {
-		--paint: 1;
 	}
 
 	/* Copy-email link: clip the label so it can slide vertically on copy. */

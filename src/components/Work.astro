@@ -6,7 +6,13 @@ const groups = [
 		items: [
 			{ title: 'Custom web design solutions', tag: 'Building', category: 'Web design' },
 			{ title: 'Websites for institutions', category: 'Freelance' },
-			{ title: 'Inventory management web app', tag: 'New', category: 'Product' },
+			{
+				title: 'mansastock',
+				href: 'https://mansa-stock.vercel.app',
+				tag: 'Building',
+				tagColor: '#006239',
+				category: 'Product',
+			},
 			{ title: 'Data & inventory, MAS Pharmacy', category: 'Operations' },
 		],
 	},
@@ -30,10 +36,21 @@ const groups = [
 						<div class="rowline" data-anim="row">
 							<span class="year">{i === 0 ? group.year : ''}</span>
 							<span class="title">
-								{item.title}
-								{item.tag && (
-									<span class:list={['tag', item.tag.toLowerCase()]}>{item.tag}</span>
+								{item.href ? (
+									<a href={item.href} target="_blank" rel="noopener">
+										{item.title}
+									</a>
+								) : (
+									item.title
 								)}
+								{item.tag &&
+									(item.tagColor ? (
+										<span class="tag" style={`background:${item.tagColor};color:#fff`}>
+											{item.tag}
+										</span>
+									) : (
+										<span class:list={['tag', item.tag.toLowerCase()]}>{item.tag}</span>
+									))}
 							</span>
 							<span class="category">{item.category}</span>
 						</div>
@@ -93,6 +110,18 @@ const groups = [
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 0.6rem;
+	}
+
+	.title a {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: var(--faint);
+		text-underline-offset: 3px;
+		transition: text-decoration-color 0.25s ease;
+	}
+
+	.rowline:hover .title a {
+		text-decoration-color: var(--accent);
 	}
 
 	.category {
