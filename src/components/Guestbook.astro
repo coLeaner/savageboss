@@ -10,24 +10,30 @@
 
 		<form class="gb-form" data-gb-form autocomplete="off">
 			<div class="fields">
-				<input
-					class="gb-input gb-name"
-					name="name"
-					type="text"
-					maxlength="40"
-					required
-					placeholder="Ya name"
-					aria-label="Your name"
-				/>
-				<input
-					class="gb-input gb-msg"
-					name="message"
-					type="text"
-					maxlength="280"
-					required
-					placeholder="Say something small…"
-					aria-label="Your message"
-				/>
+				<div class="field">
+					<input
+						class="gb-input gb-name"
+						id="gb-name"
+						name="name"
+						type="text"
+						maxlength="40"
+						required
+						placeholder=" "
+					/>
+					<label class="gb-lbl" for="gb-name">Ya name</label>
+				</div>
+				<div class="field">
+					<input
+						class="gb-input gb-msg"
+						id="gb-message"
+						name="message"
+						type="text"
+						maxlength="280"
+						required
+						placeholder=" "
+					/>
+					<label class="gb-lbl" for="gb-message">Say something small…</label>
+				</div>
 				<button class="gb-send" type="submit" data-magnetic="0.35">Sign</button>
 			</div>
 			<p class="gb-status" data-gb-status role="status" aria-live="polite"></p>
@@ -165,28 +171,71 @@
 	.fields {
 		display: grid;
 		grid-template-columns: minmax(0, 12rem) minmax(0, 1fr) auto;
-		gap: 0.6rem;
+		align-items: end;
+		gap: 0.9rem;
+	}
+
+	/* Material-style text field: a label that floats up out of the field and an
+	   accent underline that grows in when the input is focused. */
+	.field {
+		position: relative;
+		min-width: 0;
 	}
 
 	.gb-input {
 		font: inherit;
 		font-size: 1rem;
+		width: 100%;
 		color: var(--text);
 		background: transparent;
-		border: 1px solid var(--line);
-		border-radius: 10px;
-		padding: 0.6rem 0.8rem;
-		transition: border-color 0.25s ease;
+		border: none;
+		border-bottom: 1px solid var(--line);
+		border-radius: 0;
+		padding: 1.4rem 0.15rem 0.45rem;
+		transition: border-color 0.2s ease;
 		min-width: 0;
 	}
 
-	.gb-input::placeholder {
-		color: var(--faint);
+	.gb-input:focus {
+		outline: none;
 	}
 
-	.gb-input:focus-visible {
-		outline: none;
-		border-color: var(--accent);
+	.field::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 2px;
+		background: var(--accent);
+		transform: scaleX(0);
+		transition: transform 0.25s ease;
+		pointer-events: none;
+	}
+
+	.field:focus-within::after {
+		transform: scaleX(1);
+	}
+
+	.gb-lbl {
+		position: absolute;
+		left: 0.15rem;
+		top: 1.4rem;
+		color: var(--faint);
+		pointer-events: none;
+		transform-origin: left top;
+		transition: transform 0.2s ease, color 0.2s ease;
+	}
+
+	/* Filled but blurred → label parks up top in muted; focused → accent. */
+	.gb-input:not(:placeholder-shown) + .gb-lbl {
+		transform: translateY(-1.25rem) scale(0.78);
+		color: var(--muted);
+	}
+
+	.gb-input:focus + .gb-lbl {
+		transform: translateY(-1.25rem) scale(0.78);
+		color: var(--accent);
 	}
 
 	.gb-send {
