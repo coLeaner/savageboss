@@ -2,6 +2,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import CursorDot from '../components/CursorDot.astro';
+import UiSounds from '../components/UiSounds.astro';
 
 interface Props {
 	title?: string;
@@ -61,6 +62,7 @@ const {
 		</button>
 		<slot />
 		<CursorDot />
+		<UiSounds />
 
 		<script is:inline>
 			(function () {
@@ -241,6 +243,18 @@ const {
 
 	a {
 		color: inherit;
+	}
+
+	/* Food flying from the feed button into Boss's mouth (see index.astro). */
+	.food-bit {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 9999;
+		font-size: 1.5rem;
+		line-height: 1;
+		pointer-events: none;
+		will-change: transform;
 	}
 
 	/* Confetti bits spawned by Boss's secret-code rampage (see index.astro). */

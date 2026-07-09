@@ -508,9 +508,164 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 					}
 				});
 
+				// --- Feeding: visitors toss Boss a chop; he chomps and his belly grows ---
+				const feedBtn = greeter.querySelector<HTMLButtonElement>('[data-feed]');
+				if (feedBtn) {
+					const sfx = (name: string) => (window as any).bossAudio?.play?.(name);
+					let meals = 0;
+					let feeding = false;
+					let digestTimer: ReturnType<typeof setTimeout>;
+
+					const yummies = ['Chomp! Tanks ya! 😋', 'Mmm… sweet meat! 🤤', 'Whew… belly FULL! 🫃'];
+
+					// Little brown crumbs sprayed from the mouth on each chomp.
+					const crumbs = (x: number, y: number) => {
+						const shades = ['#8a5a33', '#6f4526', '#a3703f'];
+						for (let i = 0; i < 6; i++) {
+							const bit = document.createElement('div');
+							bit.className = 'confetti-bit';
+							bit.style.background = shades[i % shades.length];
+							bit.style.left = x + 'px';
+							bit.style.top = y + 'px';
+							bit.style.width = bit.style.height = '5px';
+							document.body.appendChild(bit);
+							gsap.set(bit, { xPercent: -50, yPercent: -50 });
+							gsap.to(bit, {
+								x: (Math.random() - 0.5) * 60,
+								y: 30 + Math.random() * 40,
+								rotation: Math.random() * 360,
+								opacity: 0,
+								duration: 0.6 + Math.random() * 0.3,
+								ease: 'power1.in',
+								onComplete: () => bit.remove(),
+							});
+						}
+					};
+
+					const setBelly = () => {
+						if (!belly) return;
+						const props = { scale: 1 + meals * 0.13, svgOrigin: '62 78' };
+						if (reduced) gsap.set(belly, props);
+						else gsap.to(belly, { ...props, duration: 0.45, ease: 'back.out(2)' });
+					};
+
+					const finishMeal = () => {
+						meals++;
+						setBelly();
+						sfx('chomp');
+						setTimeout(() => sfx('gulp'), 280);
+						bubble.textContent = yummies[Math.min(meals - 1, yummies.length - 1)];
+						showBubble();
+						feeding = false;
+						clearTimeout(digestTimer);
+						// Digestion slowly empties the belly so Boss can chop again.
+						digestTimer = setTimeout(() => {
+							meals = 0;
+							setBelly();
+						}, 30000);
+						calmTimer = setTimeout(() => {
+							calmDown();
+							hideBubble();
+						}, 4500);
+					};
+
+					feedBtn.addEventListener('click', () => {
+						if (feeding) return;
+						clearTimeout(calmTimer);
+
+						// Belly already full — Boss politely refuses (with a burp).
+						if (meals >= 3) {
+							wake();
+							bubble.textContent = "No more, tank ya — I'm FULL oo! 🫃";
+							showBubble();
+							sfx('burp');
+							if (!reduced) {
+								gsap.fromTo(
+									trex,
+									{ rotation: -5 },
+									{
+										rotation: 5,
+										duration: 0.09,
+										repeat: 5,
+										yoyo: true,
+										ease: 'power1.inOut',
+										onComplete: () => gsap.to(trex, { rotation: 0, duration: 0.15 }),
+									}
+								);
+							}
+							calmTimer = setTimeout(() => {
+								calmDown();
+								hideBubble();
+							}, 3500);
+							return;
+						}
+
+						// Food fixes everything: anger resets and sleepy Boss wakes to eat.
+						calmDown();
+						wake();
+						feeding = true;
+						sfx('pop');
+
+						if (reduced) {
+							finishMeal();
+							return;
+						}
+
+						// A chop arcs from the button into Boss's mouth, then he chews.
+						const food = document.createElement('div');
+						food.className = 'food-bit';
+						food.textContent = '🍖';
+						document.body.appendChild(food);
+						const from = feedBtn.getBoundingClientRect();
+						const rect = trex.getBoundingClientRect();
+						const mouthX = rect.left + rect.width * 0.82;
+						const mouthY = rect.top + rect.height * 0.42;
+						gsap.set(food, {
+							x: from.left + from.width / 2,
+							y: from.top + from.height / 2,
+							xPercent: -50,
+							yPercent: -50,
+							scale: 0.5,
+							rotation: -25,
+						});
+						gsap.to(food, {
+							keyframes: [
+								{ scale: 1.15, duration: 0.16, ease: 'back.out(3)' },
+								{
+									x: (from.left + mouthX) / 2,
+									y: Math.min(from.top, mouthY) - 48,
+									rotation: 60,
+									duration: 0.28,
+									ease: 'power2.out',
+								},
+								{ x: mouthX, y: mouthY, scale: 0.7, rotation: 140, duration: 0.22, ease: 'power2.in' },
+							],
+							onComplete: () => {
+								food.remove();
+								crumbs(mouthX, mouthY);
+								// Chomp-chomp: quick bites, then settle back down.
+								gsap.fromTo(
+									trex,
+									{ scale: 1.07, transformOrigin: '50% 100%' },
+									{
+										scale: 0.95,
+										duration: 0.09,
+										repeat: 3,
+										yoyo: true,
+										ease: 'power1.inOut',
+										onComplete: () => gsap.to(trex, { scale: 1, duration: 0.3, ease: 'back.out(3)' }),
+									}
+								);
+								finishMeal();
+							},
+						});
+					});
+				}
+
 			if (reduced) {
 				gsap.set(trex, { opacity: 1, y: 0 });
 				gsap.set(bubble, { opacity: 1, scale: 1, transformOrigin: '22% 100%' });
+				gsap.set('[data-feed]', { opacity: 1 });
 			} else {
 				gsap.set(trex, { y: 70, opacity: 0 });
 				gsap.set(bubble, { scale: 0, opacity: 0, transformOrigin: '22% 100%' });
@@ -519,6 +674,7 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 					.timeline({ delay: 0.8 })
 					.to(trex, { y: 0, opacity: 1, duration: 0.7, ease: 'back.out(1.7)' })
 					.to(bubble, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' }, '-=0.15')
+					.to('[data-feed]', { opacity: 1, duration: 0.35 }, '-=0.2')
 					.to(
 						trex,
 						isNight

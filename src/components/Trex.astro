@@ -38,6 +38,9 @@
 
 	<!-- floating zzz while Boss sleeps through the Paynesville night -->
 	<div class="zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></div>
+
+	<!-- toss Boss a chop — logic lives in index.astro -->
+	<button class="feed" data-feed type="button" aria-label="Feed Boss" title="Feed Boss">🍖</button>
 </div>
 
 <style>
@@ -51,8 +54,39 @@
 	}
 
 	.trex,
-	.bubble {
+	.bubble,
+	.feed {
 		pointer-events: auto;
+	}
+
+	/* Little round snack button hugging Boss's side. */
+	.feed {
+		position: absolute;
+		left: calc(100% + 4px);
+		bottom: 4px;
+		width: 2.1rem;
+		height: 2.1rem;
+		display: grid;
+		place-items: center;
+		padding: 0;
+		font-size: 1.05rem;
+		line-height: 1;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--bg) 70%, transparent);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
+		cursor: pointer;
+		transition: transform 0.25s ease, border-color 0.25s ease;
+	}
+
+	.feed:hover {
+		transform: scale(1.15) rotate(-10deg);
+		border-color: var(--faint);
+	}
+
+	.feed:active {
+		transform: scale(0.95);
 	}
 
 	.trex {
@@ -205,7 +239,8 @@
 
 	/* Hidden until GSAP reveals — only when we can animate (no flash). */
 	html.js:not(.reduce-motion) .trex,
-	html.js:not(.reduce-motion) .bubble {
+	html.js:not(.reduce-motion) .bubble,
+	html.js:not(.reduce-motion) .feed {
 		opacity: 0;
 	}
 
@@ -218,6 +253,11 @@
 		.trex {
 			width: 54px;
 			height: 54px;
+		}
+		.feed {
+			width: 1.85rem;
+			height: 1.85rem;
+			font-size: 0.9rem;
 		}
 	}
 </style>

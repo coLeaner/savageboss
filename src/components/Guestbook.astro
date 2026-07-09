@@ -1,6 +1,7 @@
 ---
 // Visitor guestbook — leave a short signed note that everyone can see.
 // Persists to Supabase (public read + insert, guarded by RLS).
+// Notes render as colored sticky notes pinned to the wall.
 ---
 
 <section class="guestbook">
@@ -44,12 +45,19 @@
 </section>
 
 <script>
+	import { gsap } from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 	import { supabase } from '../lib/supabase';
+
+	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	if (!reduced) gsap.registerPlugin(ScrollTrigger);
 
 	const form = document.querySelector<HTMLFormElement>('[data-gb-form]');
 	const list = document.querySelector<HTMLElement>('[data-gb-list]');
 	const status = document.querySelector<HTMLElement>('[data-gb-status]');
 	const btn = form?.querySelector<HTMLButtonElement>('.gb-send');
+
+	const PAPER_COUNT = 6;
 
 	function say(msg: string, kind: 'ok' | 'err' | '' = '') {
 		if (!status) return;
@@ -72,28 +80,82 @@
 		return unit === 's' ? 'just now' : `${val}${unit} ago`;
 	}
 
-	// Build a note row with textContent only — visitor text is never treated
+	// Cheap string hash so each note keeps the same paper color and tilt
+	// across reloads instead of reshuffling every visit.
+	function hash(s: string) {
+		let h = 0;
+		for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+		return Math.abs(h);
+	}
+
+	// Build a note with textContent only — visitor text is never treated
 	// as HTML, so a note can't inject markup onto the page.
 	function noteEl(row: { name: string; message: string; created_at: string }) {
 		const li = document.createElement('li');
 		li.className = 'gb-note';
 
-		const head = document.createElement('div');
-		head.className = 'gb-note-head';
+		const h = hash(row.name + row.message + row.created_at);
+		li.dataset.paper = String(h % PAPER_COUNT);
+		const tilt = ((h >> 3) % 7) - 3; // -3..3 deg, deterministic per note
+		li.dataset.tilt = String(tilt);
+		li.style.setProperty('--tilt', `${tilt}deg`);
+
+		const pin = document.createElement('span');
+		pin.className = 'gb-pin';
+		pin.setAttribute('aria-hidden', 'true');
+
 		const who = document.createElement('span');
 		who.className = 'gb-who';
 		who.textContent = row.name;
-		const when = document.createElement('span');
-		when.className = 'gb-when';
-		when.textContent = ago(row.created_at);
-		head.append(who, when);
 
 		const body = document.createElement('p');
 		body.className = 'gb-text';
 		body.textContent = row.message;
 
-		li.append(head, body);
+		const when = document.createElement('span');
+		when.className = 'gb-when';
+		when.textContent = ago(row.created_at);
+
+		li.append(pin, who, body, when);
+		if (!reduced) addWobble(li);
 		return li;
+	}
+
+	// Hover: lift the note and straighten it, then let it swing back on its pin.
+	function addWobble(el: HTMLElement) {
+		el.addEventListener('mouseenter', () => {
+			el.style.zIndex = '3';
+			gsap.to(el, { scale: 1.05, rotation: 0, duration: 0.3, ease: 'power2.out' });
+		});
+		el.addEventListener('mouseleave', () => {
+			gsap.to(el, {
+				scale: 1,
+				rotation: Number(el.dataset.tilt || 0),
+				duration: 0.8,
+				ease: 'elastic.out(1, 0.4)',
+				clearProps: 'transform',
+				onComplete: () => { el.style.zIndex = ''; },
+			});
+		});
+	}
+
+	// Drop each note onto the wall: falls in slightly over-rotated and
+	// snaps back to its resting tilt, like it just got pinned.
+	function stickIn(notes: HTMLElement[], onScroll = false) {
+		if (reduced || !notes.length) return;
+		gsap.from(notes, {
+			y: -30,
+			opacity: 0,
+			scale: 0.55,
+			rotation: (_i: number, el: HTMLElement) => Number(el.dataset.tilt || 0) * 3 + 8,
+			duration: 0.55,
+			ease: 'back.out(2.2)',
+			stagger: 0.06,
+			clearProps: 'transform,opacity',
+			...(onScroll && list
+				? { scrollTrigger: { trigger: list, start: 'top 88%' } }
+				: {}),
+		});
 	}
 
 	async function load() {
@@ -104,7 +166,10 @@
 			.order('created_at', { ascending: false })
 			.limit(40);
 		if (error) return;
-		list.replaceChildren(...(data ?? []).map(noteEl));
+		const notes = (data ?? []).map(noteEl);
+		list.replaceChildren(...notes);
+		stickIn(notes, true);
+		if (!reduced) ScrollTrigger.refresh(); // page grew — keep other triggers honest
 	}
 
 	if (!supabase) {
@@ -132,8 +197,10 @@
 			}
 			form.reset();
 			say('Signed — thank ya!', 'ok');
-			// Show the fresh note right away without a round-trip.
-			list?.prepend(noteEl({ name, message, created_at: new Date().toISOString() }));
+			// Pin the fresh note to the wall right away without a round-trip.
+			const note = noteEl({ name, message, created_at: new Date().toISOString() });
+			list?.prepend(note);
+			stickIn([note]);
 			setTimeout(() => say(''), 2500);
 		});
 	}
@@ -165,7 +232,7 @@
 	}
 
 	.gb-form {
-		margin-bottom: 2rem;
+		margin-bottom: 2.25rem;
 	}
 
 	.fields {
@@ -274,49 +341,99 @@
 		color: #d8574b;
 	}
 
+	/* --- The wall: a grid of small sticky notes --- */
 	.gb-list {
 		list-style: none;
 		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
+		padding: 0.25rem 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+		gap: 1.15rem;
+		align-items: start;
 	}
 
 	/* Notes are built in JS at runtime, so they never receive Astro's scoped
 	   hash — style them with :global so the rules actually apply. */
 	.gb-list :global(.gb-note) {
-		padding: 0.9rem 1.05rem;
-		border: 1px solid var(--line);
-		border-radius: 12px;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		min-height: 7.5rem;
+		max-width: 13rem;
+		padding: 1.5rem 0.8rem 0.7rem;
+		border-radius: 2px;
+		transform: rotate(var(--tilt, 0deg));
+		background: linear-gradient(
+			175deg,
+			color-mix(in srgb, var(--paper) 88%, #fff) 0%,
+			var(--paper) 55%,
+			color-mix(in srgb, var(--paper) 90%, #000) 100%
+		);
+		color: #3a3226;
+		box-shadow:
+			0 1px 2px rgba(0, 0, 0, 0.14),
+			0 8px 14px -6px rgba(0, 0, 0, 0.28);
+		font-size: 0.8125rem;
+		line-height: 1.45;
+		word-break: break-word;
 	}
 
-	.gb-list :global(.gb-note-head) {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.75rem;
-		margin-bottom: 0.3rem;
+	/* Each note gets its paper color from a deterministic hash of its content. */
+	.gb-list :global(.gb-note[data-paper='0']) { --paper: #ffd76b; }
+	.gb-list :global(.gb-note[data-paper='1']) { --paper: #ffb3ba; }
+	.gb-list :global(.gb-note[data-paper='2']) { --paper: #b4e7a8; }
+	.gb-list :global(.gb-note[data-paper='3']) { --paper: #a8d8ff; }
+	.gb-list :global(.gb-note[data-paper='4']) { --paper: #d9c7ff; }
+	.gb-list :global(.gb-note[data-paper='5']) { --paper: #ffcf9e; }
+
+	/* Red pushpin holding the note to the wall. */
+	.gb-list :global(.gb-pin) {
+		position: absolute;
+		top: 0.45rem;
+		left: 50%;
+		width: 0.8rem;
+		height: 0.8rem;
+		transform: translateX(-50%);
+		border-radius: 50%;
+		background: radial-gradient(circle at 32% 30%, #ff8a7a, #d0342c 58%, #8f1d16);
+		box-shadow:
+			0 2px 3px rgba(0, 0, 0, 0.35),
+			inset 0 -1px 2px rgba(0, 0, 0, 0.25);
+	}
+
+	/* Tiny needle shadow cast on the paper just under the pin head. */
+	.gb-list :global(.gb-pin)::after {
+		content: '';
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		width: 2px;
+		height: 0.3rem;
+		transform: translateX(-50%);
+		background: rgba(0, 0, 0, 0.22);
+		border-radius: 0 0 2px 2px;
 	}
 
 	.gb-list :global(.gb-who) {
-		font-weight: 600;
-		color: var(--accent);
+		font-weight: 700;
+		font-size: 0.8125rem;
 		letter-spacing: -0.01em;
 		overflow-wrap: anywhere;
 	}
 
-	.gb-list :global(.gb-when) {
-		flex: none;
-		font-size: 0.8125rem;
-		color: var(--faint);
-		font-variant-numeric: tabular-nums;
-	}
-
 	.gb-list :global(.gb-text) {
 		margin: 0;
-		color: var(--muted);
+		flex: 1;
+		color: rgba(42, 35, 24, 0.82);
 		overflow-wrap: anywhere;
+	}
+
+	.gb-list :global(.gb-when) {
+		align-self: flex-end;
+		font-size: 0.6875rem;
+		color: rgba(42, 35, 24, 0.55);
+		font-variant-numeric: tabular-nums;
 	}
 
 	@media (max-width: 560px) {
@@ -327,6 +444,11 @@
 		.gb-send {
 			justify-self: start;
 			padding: 0.6rem 1.6rem;
+		}
+
+		.gb-list {
+			grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+			gap: 0.9rem;
 		}
 	}
 </style>
