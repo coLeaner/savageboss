@@ -1,0 +1,60 @@
+---
+// Footer line: "You're visitor #4,821 — Boss remembers you 🦖".
+// Counts once per browser session via a security-definer RPC in Supabase;
+// stays hidden when Supabase isn't wired up or the call fails.
+---
+
+<p class="visits" data-visits hidden></p>
+
+<script>
+	import { supabase } from '../lib/supabase';
+
+	const el = document.querySelector<HTMLElement>('[data-visits]');
+
+	async function show() {
+		if (!supabase || !el) return;
+
+		// Count each browser session once — refreshes reuse the same number.
+		let cached: string | null = null;
+		try {
+			cached = sessionStorage.getItem('visit-count');
+		} catch {}
+
+		let count: number | null = cached ? Number(cached) : null;
+
+		if (count === null) {
+			const { data, error } = await supabase.rpc('record_visit');
+			if (error || typeof data !== 'number') return; // stay hidden, no drama
+			count = data;
+			try {
+				sessionStorage.setItem('visit-count', String(count));
+			} catch {}
+		}
+
+		// Returning visitors get remembered; first-timers get a promise.
+		let returning = false;
+		try {
+			returning = localStorage.getItem('visited') === '1';
+			localStorage.setItem('visited', '1');
+		} catch {}
+
+		el.textContent = `You're visitor #${count.toLocaleString()} — ${
+			returning ? 'Boss remembers you 🦖' : 'Boss will remember you 🦖'
+		}`;
+		el.removeAttribute('hidden');
+	}
+
+	show();
+</script>
+
+<style>
+	.visits {
+		max-width: var(--content);
+		margin: 0 auto clamp(2rem, 6vh, 3.5rem);
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--line);
+		font-size: 0.8125rem;
+		color: var(--faint);
+		font-variant-numeric: tabular-nums;
+	}
+</style>

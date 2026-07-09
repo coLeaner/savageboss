@@ -1,7 +1,9 @@
 ---
 // Visitor guestbook — leave a short signed note that everyone can see.
 // Persists to Supabase (public read + insert, guarded by RLS).
-// Notes render as colored sticky notes pinned to the wall.
+// Notes render as colored sticky notes pinned to the wall; visitors can
+// doodle a tiny sketch, stamp a mood emoji, and drag notes around.
+const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 ---
 
 <section class="guestbook">
@@ -30,13 +32,32 @@
 						name="message"
 						type="text"
 						maxlength="280"
-						required
 						placeholder=" "
 					/>
 					<label class="gb-lbl" for="gb-message">Say something small…</label>
 				</div>
 				<button class="gb-send" type="submit" data-magnetic="0.35">Sign</button>
 			</div>
+
+			<div class="gb-extras">
+				<div class="gb-moods" role="group" aria-label="Pick a mood for your note">
+					{moods.map((m) => (
+						<button type="button" class="gb-mood-btn" data-mood={m} aria-pressed="false">{m}</button>
+					))}
+				</div>
+				<button type="button" class="gb-pad-toggle" data-pad-toggle aria-expanded="false">
+					✏️ Doodle
+				</button>
+			</div>
+
+			<div class="gb-pad" data-pad hidden>
+				<canvas class="gb-canvas" data-canvas width="360" height="252" aria-label="Doodle pad — draw a small sketch for your note"></canvas>
+				<div class="gb-pad-row">
+					<span class="gb-pad-hint">draw small small… it goes on ya note</span>
+					<button type="button" class="gb-pad-clear" data-pad-clear>Clear</button>
+				</div>
+			</div>
+
 			<p class="gb-status" data-gb-status role="status" aria-live="polite"></p>
 		</form>
 
@@ -47,10 +68,15 @@
 <script>
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { Draggable } from 'gsap/Draggable';
 	import { supabase } from '../lib/supabase';
 
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	if (!reduced) gsap.registerPlugin(ScrollTrigger);
+	if (!reduced) gsap.registerPlugin(ScrollTrigger, Draggable);
+
+	// Dragging is desktop-only: on touch it would fight page scrolling.
+	const canDrag =
+		!reduced && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 	const form = document.querySelector<HTMLFormElement>('[data-gb-form]');
 	const list = document.querySelector<HTMLElement>('[data-gb-list]');
@@ -58,6 +84,15 @@
 	const btn = form?.querySelector<HTMLButtonElement>('.gb-send');
 
 	const PAPER_COUNT = 6;
+	const DOODLE_RE = /^data:image\/png;base64,[A-Za-z0-9+/=]+$/;
+
+	type Row = {
+		name: string;
+		message: string;
+		created_at: string;
+		mood?: string | null;
+		doodle?: string | null;
+	};
 
 	function say(msg: string, kind: 'ok' | 'err' | '' = '') {
 		if (!status) return;
@@ -88,9 +123,121 @@
 		return Math.abs(h);
 	}
 
+	// --- Mood picker: one emoji, tap again to unpick ---
+	let mood: string | null = null;
+	const moodBtns = Array.from(
+		document.querySelectorAll<HTMLButtonElement>('.gb-mood-btn')
+	);
+	moodBtns.forEach((b) => {
+		b.addEventListener('click', () => {
+			mood = mood === b.dataset.mood ? null : b.dataset.mood ?? null;
+			moodBtns.forEach((x) =>
+				x.setAttribute('aria-pressed', String(x.dataset.mood === mood))
+			);
+		});
+	});
+
+	// --- Doodle pad: tiny transparent-PNG sketches ---
+	const pad = document.querySelector<HTMLElement>('[data-pad]');
+	const padToggle = document.querySelector<HTMLButtonElement>('[data-pad-toggle]');
+	const padClear = document.querySelector<HTMLButtonElement>('[data-pad-clear]');
+	const canvas = document.querySelector<HTMLCanvasElement>('[data-canvas]');
+	const ink = canvas?.getContext('2d') ?? null;
+	let drawing = false;
+	let dirty = false;
+
+	if (ink) {
+		ink.strokeStyle = '#2e2820';
+		ink.lineWidth = 5; // canvas is 2x its display size
+		ink.lineCap = 'round';
+		ink.lineJoin = 'round';
+	}
+
+	function padPoint(e: PointerEvent) {
+		const r = canvas!.getBoundingClientRect();
+		return {
+			x: ((e.clientX - r.left) / r.width) * canvas!.width,
+			y: ((e.clientY - r.top) / r.height) * canvas!.height,
+		};
+	}
+
+	canvas?.addEventListener('pointerdown', (e) => {
+		if (!ink) return;
+		canvas.setPointerCapture(e.pointerId);
+		drawing = true;
+		dirty = true;
+		const p = padPoint(e);
+		ink.beginPath();
+		ink.moveTo(p.x, p.y);
+		ink.lineTo(p.x + 0.1, p.y + 0.1); // a tap leaves a dot
+		ink.stroke();
+	});
+	canvas?.addEventListener('pointermove', (e) => {
+		if (!drawing || !ink) return;
+		const p = padPoint(e);
+		ink.lineTo(p.x, p.y);
+		ink.stroke();
+	});
+	['pointerup', 'pointercancel'].forEach((ev) =>
+		canvas?.addEventListener(ev, () => (drawing = false))
+	);
+
+	function clearPad() {
+		if (ink && canvas) ink.clearRect(0, 0, canvas.width, canvas.height);
+		dirty = false;
+	}
+	padClear?.addEventListener('click', clearPad);
+
+	padToggle?.addEventListener('click', () => {
+		if (!pad) return;
+		pad.hidden = !pad.hidden;
+		padToggle.setAttribute('aria-expanded', String(!pad.hidden));
+		padToggle.textContent = pad.hidden ? '✏️ Doodle' : '✏️ Doodle — on';
+	});
+
+	// Shrink the sketch to note size so the stored PNG stays tiny.
+	function exportDoodle(): string | null {
+		if (!dirty || !canvas || pad?.hidden) return null;
+		const out = document.createElement('canvas');
+		out.width = 180;
+		out.height = 126;
+		out.getContext('2d')!.drawImage(canvas, 0, 0, out.width, out.height);
+		const url = out.toDataURL('image/png');
+		return url.length <= 24000 ? url : null;
+	}
+
+	// --- Drag notes around the wall (never saved — just playful) ---
+	// MUST run after the note is in the DOM: Draggable measures the element
+	// on creation, and a detached note measures at (0,0), which made bounds
+	// shove every note off the wall. Bounds are the guestbook section so a
+	// dragged note can never stretch the page taller.
+	const wallBounds = document.querySelector<HTMLElement>('.guestbook');
+	function makeDraggable(el: HTMLElement) {
+		if (!canDrag) return;
+		Draggable.create(el, {
+			type: 'x,y',
+			bounds: wallBounds ?? undefined,
+			edgeResistance: 0.8,
+			onDragStart() {
+				el.dataset.dragging = '1';
+				gsap.to(el, { scale: 1.06, rotation: 0, duration: 0.2, ease: 'power2.out' });
+			},
+			onRelease() {
+				delete el.dataset.dragging;
+				gsap.to(el, {
+					scale: 1,
+					rotation: Number(el.dataset.tilt || 0),
+					duration: 0.7,
+					ease: 'elastic.out(1, 0.4)',
+				});
+			},
+		});
+	}
+
 	// Build a note with textContent only — visitor text is never treated
-	// as HTML, so a note can't inject markup onto the page.
-	function noteEl(row: { name: string; message: string; created_at: string }) {
+	// as HTML, so a note can't inject markup onto the page. The doodle is
+	// only accepted if it looks exactly like our own small PNG data URLs.
+	function noteEl(row: Row) {
 		const li = document.createElement('li');
 		li.className = 'gb-note';
 
@@ -103,45 +250,71 @@
 		const pin = document.createElement('span');
 		pin.className = 'gb-pin';
 		pin.setAttribute('aria-hidden', 'true');
+		li.append(pin);
+
+		if (row.mood) {
+			const stamp = document.createElement('span');
+			stamp.className = 'gb-stamp';
+			stamp.textContent = row.mood.slice(0, 8);
+			li.append(stamp);
+		}
 
 		const who = document.createElement('span');
 		who.className = 'gb-who';
 		who.textContent = row.name;
+		li.append(who);
 
-		const body = document.createElement('p');
-		body.className = 'gb-text';
-		body.textContent = row.message;
+		if (row.doodle && DOODLE_RE.test(row.doodle)) {
+			const img = document.createElement('img');
+			img.className = 'gb-doodle';
+			img.src = row.doodle;
+			img.alt = `${row.name}'s doodle`;
+			img.width = 180;
+			img.height = 126;
+			li.append(img);
+		}
+
+		if (row.message) {
+			const body = document.createElement('p');
+			body.className = 'gb-text';
+			body.textContent = row.message;
+			li.append(body);
+		}
 
 		const when = document.createElement('span');
 		when.className = 'gb-when';
 		when.textContent = ago(row.created_at);
+		li.append(when);
 
-		li.append(pin, who, body, when);
 		if (!reduced) addWobble(li);
 		return li;
 	}
 
 	// Hover: lift the note and straighten it, then let it swing back on its pin.
+	// Skipped mid-drag so it doesn't fight Draggable for the transform.
 	function addWobble(el: HTMLElement) {
 		el.addEventListener('mouseenter', () => {
+			if (el.dataset.dragging) return;
 			el.style.zIndex = '3';
 			gsap.to(el, { scale: 1.05, rotation: 0, duration: 0.3, ease: 'power2.out' });
 		});
 		el.addEventListener('mouseleave', () => {
+			if (el.dataset.dragging) return;
 			gsap.to(el, {
 				scale: 1,
 				rotation: Number(el.dataset.tilt || 0),
 				duration: 0.8,
 				ease: 'elastic.out(1, 0.4)',
-				clearProps: 'transform',
 				onComplete: () => { el.style.zIndex = ''; },
 			});
 		});
 	}
 
 	// Drop each note onto the wall: falls in slightly over-rotated and
-	// snaps back to its resting tilt, like it just got pinned.
-	function stickIn(notes: HTMLElement[], onScroll = false) {
+	// snaps back to its resting tilt, like it just got pinned. Plays
+	// immediately — gating it on scroll position once left the whole wall
+	// stuck invisible, which read as a giant empty gap in the page.
+	function stickIn(notes: HTMLElement[]) {
 		if (reduced || !notes.length) return;
 		gsap.from(notes, {
 			y: -30,
@@ -151,24 +324,46 @@
 			duration: 0.55,
 			ease: 'back.out(2.2)',
 			stagger: 0.06,
-			clearProps: 'transform,opacity',
-			...(onScroll && list
-				? { scrollTrigger: { trigger: list, start: 'top 88%' } }
-				: {}),
 		});
+	}
+
+	// Signatures of notes THIS visitor just signed — the realtime event for
+	// them would double-pin the note we already showed optimistically.
+	const ownNotes = new Set<string>();
+
+	// Live wall: someone else's note pins itself on while you watch.
+	function watchWall() {
+		if (!supabase || !list) return;
+		supabase
+			.channel('guestbook-live')
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'guestbook' },
+				(payload) => {
+					const row = payload.new as Row;
+					if (ownNotes.has(row.name + '|' + row.message)) return;
+					const note = noteEl(row);
+					list!.prepend(note);
+					makeDraggable(note);
+					stickIn([note]);
+					(window as any).bossAudio?.play?.('pop');
+				}
+			)
+			.subscribe();
 	}
 
 	async function load() {
 		if (!supabase || !list) return;
 		const { data, error } = await supabase
 			.from('guestbook')
-			.select('name, message, created_at')
+			.select('name, message, created_at, mood, doodle')
 			.order('created_at', { ascending: false })
 			.limit(40);
 		if (error) return;
 		const notes = (data ?? []).map(noteEl);
 		list.replaceChildren(...notes);
-		stickIn(notes, true);
+		notes.forEach(makeDraggable);
+		stickIn(notes);
 		if (!reduced) ScrollTrigger.refresh(); // page grew — keep other triggers honest
 	}
 
@@ -179,16 +374,27 @@
 		status?.removeAttribute('hidden');
 	} else if (form) {
 		load();
+		watchWall();
 		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			const fd = new FormData(form);
 			const name = String(fd.get('name') || '').trim();
 			const message = String(fd.get('message') || '').trim();
-			if (!name || !message) return;
+			const doodle = exportDoodle();
+			if (!name) return;
+			if (!message && !doodle) {
+				say('Write something or doodle something 🙃', 'err');
+				return;
+			}
 
 			btn && (btn.disabled = true);
 			say('Signing…');
-			const { error } = await supabase.from('guestbook').insert({ name, message });
+			const sig = name + '|' + message;
+			ownNotes.add(sig);
+			setTimeout(() => ownNotes.delete(sig), 15000);
+			const { error } = await supabase
+				.from('guestbook')
+				.insert({ name, message, mood, doodle });
 			btn && (btn.disabled = false);
 
 			if (error) {
@@ -198,9 +404,20 @@
 			form.reset();
 			say('Signed — thank ya!', 'ok');
 			// Pin the fresh note to the wall right away without a round-trip.
-			const note = noteEl({ name, message, created_at: new Date().toISOString() });
+			const note = noteEl({
+				name,
+				message,
+				created_at: new Date().toISOString(),
+				mood,
+				doodle,
+			});
 			list?.prepend(note);
+			makeDraggable(note);
 			stickIn([note]);
+			// Reset the extras for the next visitor.
+			clearPad();
+			mood = null;
+			moodBtns.forEach((x) => x.setAttribute('aria-pressed', 'false'));
 			setTimeout(() => say(''), 2500);
 		});
 	}
@@ -326,6 +543,99 @@
 		cursor: default;
 	}
 
+	/* --- Mood picker + doodle toggle row --- */
+	.gb-extras {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.9rem;
+		flex-wrap: wrap;
+		margin-top: 0.9rem;
+	}
+
+	.gb-moods {
+		display: flex;
+		gap: 0.3rem;
+	}
+
+	.gb-mood-btn {
+		font: inherit;
+		font-size: 1rem;
+		line-height: 1;
+		padding: 0.35rem 0.45rem;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 10px;
+		cursor: pointer;
+		filter: grayscale(0.7);
+		transition: transform 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
+	}
+
+	.gb-mood-btn:hover {
+		filter: grayscale(0);
+		transform: scale(1.15) rotate(-6deg);
+	}
+
+	.gb-mood-btn[aria-pressed='true'] {
+		filter: grayscale(0);
+		border-color: var(--accent);
+		transform: scale(1.1);
+	}
+
+	.gb-pad-toggle,
+	.gb-pad-clear {
+		font: inherit;
+		font-size: 0.8125rem;
+		color: var(--muted);
+		background: transparent;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		padding: 0.35rem 0.7rem;
+		cursor: pointer;
+		transition: color 0.2s ease, border-color 0.2s ease;
+	}
+
+	.gb-pad-toggle:hover,
+	.gb-pad-clear:hover {
+		color: var(--text);
+		border-color: var(--faint);
+	}
+
+	.gb-pad-toggle[aria-expanded='true'] {
+		color: var(--accent);
+		border-color: var(--accent);
+	}
+
+	/* --- The doodle pad: a blank sticky note you draw on --- */
+	.gb-pad {
+		margin-top: 0.9rem;
+	}
+
+	.gb-canvas {
+		display: block;
+		width: min(100%, 15rem);
+		aspect-ratio: 10 / 7;
+		background: linear-gradient(175deg, #fff3c4 0%, #ffe98f 100%);
+		border-radius: 2px;
+		box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.3);
+		cursor: crosshair;
+		touch-action: none; /* fingers draw, they don't scroll */
+	}
+
+	.gb-pad-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		width: min(100%, 15rem);
+		margin-top: 0.45rem;
+	}
+
+	.gb-pad-hint {
+		font-size: 0.75rem;
+		color: var(--faint);
+	}
+
 	.gb-status {
 		margin: 0.7rem 0 0;
 		min-height: 1.2em;
@@ -379,6 +689,16 @@
 		word-break: break-word;
 	}
 
+	.gb-list :global(.gb-note:active) {
+		cursor: grabbing;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.gb-list :global(.gb-note) {
+			cursor: grab;
+		}
+	}
+
 	/* Each note gets its paper color from a deterministic hash of its content. */
 	.gb-list :global(.gb-note[data-paper='0']) { --paper: #ffd76b; }
 	.gb-list :global(.gb-note[data-paper='1']) { --paper: #ffb3ba; }
@@ -415,6 +735,26 @@
 		border-radius: 0 0 2px 2px;
 	}
 
+	/* Mood stamp: an emoji sticker slapped on the top-right corner. */
+	.gb-list :global(.gb-stamp) {
+		position: absolute;
+		top: 0.3rem;
+		right: 0.35rem;
+		font-size: 1.05rem;
+		line-height: 1;
+		transform: rotate(12deg);
+		filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+	}
+
+	/* Visitor sketches sit right on the paper (multiply hides any white). */
+	.gb-list :global(.gb-doodle) {
+		width: 100%;
+		height: auto;
+		border-radius: 2px;
+		mix-blend-mode: multiply;
+		pointer-events: none;
+	}
+
 	.gb-list :global(.gb-who) {
 		font-weight: 700;
 		font-size: 0.8125rem;
@@ -430,6 +770,7 @@
 	}
 
 	.gb-list :global(.gb-when) {
+		margin-top: auto;
 		align-self: flex-end;
 		font-size: 0.6875rem;
 		color: rgba(42, 35, 24, 0.55);

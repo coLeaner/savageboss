@@ -59,4 +59,24 @@
 	html.js:not(.reduce-motion) .tag {
 		clip-path: inset(0 100% 0 0);
 	}
+
+	/* Shattered: the box goes clear and each letter shard (built by SplitText
+	   at runtime, hence :global) carries its own chunk of highlighter color. */
+	.tag.shattered {
+		background: transparent;
+	}
+
+	.hero :global(.shard) {
+		padding: 0.06em 0.03em;
+		border-radius: 6px;
+		will-change: transform;
+	}
+
+	.tag--boss :global(.shard) {
+		background: #f3b5e5;
+	}
+
+	.tag--sheriff :global(.shard) {
+		background: #f5921f;
+	}
 </style>

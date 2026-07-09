@@ -104,6 +104,12 @@
 				blip(150, 55, 0.3, 'sawtooth', 0.16);
 				crunch(0.2, 300, 0.25, 0.03);
 			},
+			shatter: function () {
+				crunch(0.22, 5000, 0.5); // glassy crack
+				blip(2600, 300, 0.3, 'triangle', 0.16, 0.02);
+				blip(3200, 500, 0.25, 'sine', 0.1, 0.06);
+				blip(1800, 240, 0.35, 'sine', 0.09, 0.1);
+			},
 		};
 
 		function play(name) {

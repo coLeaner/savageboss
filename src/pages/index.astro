@@ -7,6 +7,7 @@ import OffScreen from '../components/OffScreen.astro';
 import Hero from '../components/Hero.astro';
 import Trex from '../components/Trex.astro';
 import Guestbook from '../components/Guestbook.astro';
+import VisitorCount from '../components/VisitorCount.astro';
 import FontSwitcher from '../components/FontSwitcher.astro';
 ---
 
@@ -21,6 +22,7 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 		<OffScreen />
 		<Hero />
 		<Guestbook />
+		<VisitorCount />
 		<FontSwitcher />
 	</main>
 	<Trex />
@@ -48,6 +50,125 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 	if (!reduced) {
 		gsap.registerPlugin(ScrollTrigger, SplitText, MotionPathPlugin);
 
+		// --- Shatter: hover calmly on the big name and nothing happens, but
+		// swipe across it fast and aggressively and the letters break apart,
+		// rain down, then fly back together. Attached immediately (NOT behind
+		// the fonts-ready gate below) so it works from the first second. ---
+		const heroEl = document.querySelector<HTMLElement>('.hero-section .hero');
+		const heroTags = gsap.utils.toArray<HTMLElement>('[data-tag]');
+		if (heroEl && heroTags.length && window.matchMedia('(hover: hover)').matches) {
+			let heat = 0;
+			let lastX = 0, lastY = 0, lastT = 0;
+			let shattering = false;
+			let cooling = false;
+			// Second trigger: quick repeated passes over the words count
+			// as aggression even if raw speed never gets extreme.
+			let streak = 0;
+			let lastEnter = 0;
+
+			const shatter = () => {
+				shattering = true;
+				heat = 0;
+				(window as any).bossAudio?.play?.('shatter');
+				gsap.set(heroTags, { x: 0, y: 0, scale: 1, rotate: 0, overwrite: 'auto' });
+
+				const splits = heroTags.map((tag) => {
+					tag.classList.add('shattered');
+					return new SplitText(tag, { type: 'chars', charsClass: 'shard' });
+				});
+				const shards = splits.flatMap((s) => s.chars as HTMLElement[]);
+
+				// Each shard pops up, spins away, and drops off the wall.
+				shards.forEach((shard) => {
+					gsap.timeline()
+						.to(shard, {
+							x: gsap.utils.random(-170, 170),
+							rotation: gsap.utils.random(-260, 260),
+							duration: 1,
+							ease: 'power1.out',
+						}, 0)
+						.to(shard, {
+							y: gsap.utils.random(-140, -40),
+							duration: 0.3,
+							ease: 'power2.out',
+						}, 0)
+						.to(shard, {
+							y: gsap.utils.random(240, 440),
+							duration: 0.7,
+							ease: 'power2.in',
+						}, 0.3)
+						.to(shard, { opacity: 0, duration: 0.25, ease: 'power1.in' }, 0.75);
+				});
+
+				// Sweep the pieces back up and glue the name together again.
+				gsap.delayedCall(1.55, () => {
+					gsap.to(shards, {
+						x: 0,
+						y: 0,
+						rotation: 0,
+						opacity: 1,
+						duration: 0.6,
+						ease: 'back.out(1.5)',
+						stagger: { each: 0.02, from: 'random' },
+						onComplete: () => {
+							splits.forEach((s) => s.revert());
+							heroTags.forEach((t) => t.classList.remove('shattered'));
+							shattering = false;
+							cooling = true;
+							setTimeout(() => (cooling = false), 1500);
+						},
+					});
+				});
+			};
+
+			const tremble = () =>
+				gsap.to(heroTags, {
+					x: () => gsap.utils.random(-2.5, 2.5),
+					y: () => gsap.utils.random(-1.5, 1.5),
+					duration: 0.05,
+					overwrite: 'auto',
+					onComplete: () => gsap.set(heroTags, { x: 0, y: 0 }),
+				});
+
+			heroEl.addEventListener('pointermove', (e) => {
+				if (shattering || cooling) return;
+				const t = performance.now();
+				if (lastT) {
+					const dt = t - lastT;
+					const dist = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+					// Fast, jerky movement heats the name up; calm hovering
+					// cools it back down before anything breaks.
+					heat = Math.max(0, heat * Math.pow(0.9992, dt) + dist);
+					if (heat > 550) shatter();
+					else if (heat > 300) tremble(); // it's about to give way
+				}
+				lastX = e.clientX;
+				lastY = e.clientY;
+				lastT = t;
+			});
+			heroEl.addEventListener('pointerleave', () => {
+				lastT = 0;
+				heat *= 0.7; // walking away lets it settle
+			});
+
+			// Rushing back and forth over the words: 3 quick entries
+			// (a fast double pass over the name) breaks it too.
+			heroTags.forEach((tag) => {
+				tag.addEventListener('mouseenter', () => {
+					if (shattering || cooling) return;
+					const now = performance.now();
+					streak = now - lastEnter < 650 ? streak + 1 : 1;
+					lastEnter = now;
+					if (streak >= 3) {
+						streak = 0;
+						shatter();
+					} else if (streak >= 2) {
+						tremble();
+					}
+				});
+			});
+		}
+
 		// Wait for the variable font so SplitText measures line breaks correctly.
 		const ready = (document as any).fonts?.ready ?? Promise.resolve();
 
@@ -67,25 +188,28 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 					stagger: 0.16,
 					scrollTrigger: { trigger: '.hero-section', start: 'top 82%' },
 				});
-				// Playful tilt on hover.
+				// Playful tilt on hover (paused while the name is in pieces).
 				tags.forEach((tag, i) => {
-					tag.addEventListener('mouseenter', () =>
+					tag.addEventListener('mouseenter', () => {
+						if (tag.classList.contains('shattered')) return;
 						gsap.to(tag, {
 							scale: 1.04,
 							rotate: i === 0 ? -2.5 : 2.5,
 							duration: 0.4,
 							ease: 'power2.out',
-						})
-					);
-					tag.addEventListener('mouseleave', () =>
+						});
+					});
+					tag.addEventListener('mouseleave', () => {
+						if (tag.classList.contains('shattered')) return;
 						gsap.to(tag, {
 							scale: 1,
 							rotate: 0,
 							duration: 0.6,
 							ease: 'elastic.out(1, 0.5)',
-						})
-					);
+						});
+					});
 				});
+
 			}
 
 			gsap.utils.toArray<HTMLElement>('[data-anim="fade"]').forEach((el) => {
