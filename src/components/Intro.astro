@@ -5,32 +5,39 @@ const email = 'abrahamasheriff6@gmail.com';
 const portfolio = 'https://abesboss.netlify.app';
 const github = 'https://github.com/coLeaner';
 const linkedin = '#';
+const MansaStock = 'https://mansa-stock.vercel.app';
 ---
 
 <header class="intro">
 	<h1 class="name" data-anim="fade">Abraham A. Sheriff</h1>
-	<p class="updated" data-anim="fade">Web Developer · Updated 8 Jul 2026</p>
+	<p class="updated" data-anim="fade">
+		<span class="time" data-clock aria-label="Current local time in Paynesville">—:—:—</span>
+	</p>
 
 	<div class="body">
 		<p data-anim="lines">
-			Ya, welcome-oh — I glad you reach! I'm a web developer right here in
-			Paynesville City, Liberia self. I build fine, easy-to-use web thing the
-			kind that quietly help business keep eye on wha matter.
+			Hi, and welcome. I'm a web developer based in Paynesville City, Liberia,
+			and I create simple, user-friendly digital experiences that help businesses
+			stay focused on what matters most.
 		</p>
 		<p data-anim="lines">
-			I still da school small, finishing my BSc in Information Technology at <span
-				class="hl">BlueCrest University College</span>, and I know my way round
-			UX/UI, HTML, CSS, JavaScript, React and Next.js. Right now I building
-			mansastock, my own inventory app, and I handling the data them at MAS
-			Pharmacy.
+			I am currently completing my BSc in Information Technology at <span
+				class="hl">BlueCrest University College</span>, and my work are usually associated with <span class="brushlink">
+			UX/UI, HTML, CSS, JavaScript, React,
+		</span>
+			<span class="brushlink brush-gh"> and Next.js </span>
+			 Right now, I am building <br/>
+			<span class="brushlink"><a href={MansaStock}>MansaStock</a> </span> The AI business management application, that help businesses run their entire business operations with ease,
+			and I also handle data-related
+			work at MAS Pharmacy.
 		</p>
 		<p class="say-hi" data-anim="fade">
-			Come say ya hello on{' '}
+			Say hello on{' '}
 			<a class="brushlink brush-gh" href={github} target="_blank" rel="noopener" data-magnetic="0.3">GitHub</a>,{' '}
 			<a class="brushlink brush-li" href={linkedin} target="_blank" rel="noopener" data-magnetic="0.3">LinkedIn</a>, my{' '}
 			<a class="brushlink brush-pf" href={portfolio} target="_blank" rel="noopener" data-magnetic="0.3">portfolio</a>, or{' '}
 			<a id="copy-email" class="brushlink brush-em" href={`mailto:${email}`} data-email={email} aria-label="Copy email address" data-magnetic="0.3"><span class="label">email</span></a>{' '}
-			— leh talk.
+			let’s chat.
 		</p>
 	</div>
 </header>
@@ -51,6 +58,26 @@ const linkedin = '#';
 		margin: 0.25rem 0 0;
 		color: var(--muted);
 		font-size: 0.9375rem;
+	}
+
+	.updated .time {
+		color: var(--text);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Blinking colons give the ticking clock a little pulse. */
+	.updated .time :global(.c) {
+		animation: clock-blink 1s ease-in-out infinite;
+	}
+
+	@keyframes clock-blink {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.25;
+		}
 	}
 
 	.body {
@@ -132,5 +159,11 @@ const linkedin = '#';
 	#copy-email .label {
 		display: inline-block;
 		will-change: transform, opacity;
+	}
+	.hl {
+		color: rgb(9, 9, 214);
+		font-weight: 500;
+		font-size: 1.1rem;
+		font-bold: 500;
 	}
 </style>
