@@ -1,0 +1,121 @@
+---
+import { getCollection } from 'astro:content';
+import { markerColors, formatDate } from '../lib/blog';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+	.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+	.slice(0, 3);
+---
+
+{
+	posts.length > 0 && (
+		<section class="blog">
+			<h2 class="heading" data-anim="fade">Notes</h2>
+
+			<div class="table">
+				{posts.map((post, i) => (
+					<a
+						class="rowline"
+						href={`/blog/${post.id}`}
+						data-anim="row"
+						style={`--mk:${markerColors[i % markerColors.length]}`}
+					>
+						<span class="date">{formatDate(post.data.date)}</span>
+						<span class="title">
+							<span class="mark">{post.data.title}</span>
+						</span>
+					</a>
+				))}
+			</div>
+
+			<a class="all" href="/blog" data-anim="fade">All notes →</a>
+		</section>
+	)
+}
+
+<style>
+	.blog {
+		margin-top: clamp(2.5rem, 6vh, 4rem);
+	}
+
+	.heading {
+		margin: 0 0 1.75rem;
+		padding-top: 1.75rem;
+		border-top: 1px solid var(--line);
+		font-size: 0.9375rem;
+		font-weight: 400;
+		color: var(--muted);
+	}
+
+	.rowline {
+		display: grid;
+		grid-template-columns: 6rem 1fr;
+		gap: 1rem;
+		align-items: baseline;
+		padding: 0.85rem 0;
+		text-decoration: none;
+	}
+
+	.date {
+		color: var(--faint);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.title {
+		color: var(--text);
+	}
+
+	/* Same marker signature as the Notes index — swipes in on hover. */
+	.mark {
+		position: relative;
+		display: inline;
+	}
+
+	.mark::after {
+		content: '';
+		position: absolute;
+		left: -0.08em;
+		right: -0.08em;
+		bottom: -0.02em;
+		height: 0.4em;
+		z-index: -1;
+		background: var(--mk);
+		-webkit-mask: url('/brush.svg') no-repeat center / 100% 100%;
+		mask: url('/brush.svg') no-repeat center / 100% 100%;
+		opacity: 0.9;
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+		pointer-events: none;
+	}
+
+	.rowline:hover .mark::after,
+	.rowline:focus-visible .mark::after {
+		transform: scaleX(1);
+	}
+
+	.all {
+		display: inline-block;
+		margin-top: 0.5rem;
+		color: var(--muted);
+		font-size: 0.9375rem;
+		text-decoration: underline;
+		text-decoration-color: var(--faint);
+		text-underline-offset: 3px;
+		transition: color 0.25s ease, text-decoration-color 0.25s ease;
+	}
+
+	.all:hover {
+		color: var(--text);
+		text-decoration-color: var(--text);
+	}
+
+	@media (max-width: 640px) {
+		.rowline {
+			grid-template-columns: 4.5rem 1fr;
+		}
+	}
+</style>

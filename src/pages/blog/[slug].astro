@@ -1,0 +1,547 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import BlogMasthead from '../../components/BlogMasthead.astro';
+import { readingTime, formatDate } from '../../lib/blog';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('blog', ({ data }) => !data.draft);
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const minutes = readingTime(post.body);
+---
+
+<Layout title={`${post.data.title} — Abraham A. Sheriff`} description={post.data.description}>
+	<main class="shell">
+		<div class="col">
+			<BlogMasthead />
+
+			<article>
+				<header class="head">
+					{
+						post.data.tags.length > 0 && (
+							<ul class="tags">
+								{post.data.tags.map((tag) => (
+									<li>{tag}</li>
+								))}
+							</ul>
+						)
+					}
+
+					<h1 class="title">
+						<span class="mark">{post.data.title}</span>
+					</h1>
+
+					<p class="dateline">
+						<span class="place">Paynesville, Liberia</span>
+						<span class="sep" aria-hidden="true">/</span>
+						<time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+						<span class="sep" aria-hidden="true">/</span>
+						<span>{minutes} min read</span>
+					</p>
+				</header>
+
+				<div class="prose">
+					<Content />
+				</div>
+			</article>
+
+			<footer class="foot">
+				<a class="back" href="/blog">
+					<span class="arrow" aria-hidden="true">←</span> All notes
+				</a>
+				<span class="signoff">Written in Paynesville, Liberia 🇱🇷</span>
+			</footer>
+		</div>
+	</main>
+</Layout>
+
+<script>
+	// Wrap wide Markdown tables in a scroll container so they can overflow
+	// horizontally instead of blowing out the reading column.
+	for (const table of document.querySelectorAll<HTMLElement>('.prose table')) {
+		if (table.parentElement?.classList.contains('table-scroll')) continue;
+		const scroll = document.createElement('div');
+		scroll.className = 'table-scroll';
+		table.replaceWith(scroll);
+		scroll.appendChild(table);
+	}
+
+	// Render ```mermaid fences into live diagrams. Astro (Shiki) emits them as
+	// <pre class="astro-code" data-language="mermaid"> with the source split
+	// across <span>s — pre.textContent reconstructs the exact diagram source,
+	// which we lift into a <pre class="mermaid"> for mermaid.run().
+	const sources = Array.from(
+		document.querySelectorAll<HTMLElement>(
+			'.prose pre[data-language="mermaid"]'
+		)
+	);
+
+	if (sources.length) {
+		const { default: mermaid } = await import('mermaid');
+
+		const diagrams = sources.map((pre) => {
+			const source = pre.textContent ?? '';
+			const host = document.createElement('pre');
+			host.className = 'mermaid';
+			host.dataset.src = source;
+			host.textContent = source;
+
+			const wrap = document.createElement('div');
+			wrap.className = 'mermaid-diagram';
+			wrap.appendChild(host);
+
+			pre.replaceWith(wrap);
+			return host;
+		});
+
+		const isDark = () => {
+			const attr = document.documentElement.getAttribute('data-theme');
+			if (attr) return attr === 'dark';
+			return window.matchMedia('(prefers-color-scheme: dark)').matches;
+		};
+
+		let busy = false;
+		const render = async () => {
+			if (busy) return;
+			busy = true;
+			// Restore raw source before each pass so a theme flip re-renders cleanly.
+			// textContent (not innerHTML) keeps literal <br/> for node labels.
+			for (const el of diagrams) {
+				el.removeAttribute('data-processed');
+				el.textContent = el.dataset.src ?? '';
+			}
+			mermaid.initialize({
+				startOnLoad: false,
+				theme: isDark() ? 'dark' : 'default',
+				securityLevel: 'loose',
+				fontFamily: getComputedStyle(document.body).fontFamily,
+			});
+			try {
+				await mermaid.run({ nodes: diagrams });
+			} finally {
+				busy = false;
+			}
+		};
+
+		await render();
+
+		// Re-render on theme change (toggle sets data-theme; OS pref otherwise).
+		let raf = 0;
+		const schedule = () => {
+			cancelAnimationFrame(raf);
+			raf = requestAnimationFrame(render);
+		};
+		new MutationObserver(schedule).observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['data-theme'],
+		});
+		window
+			.matchMedia('(prefers-color-scheme: dark)')
+			.addEventListener('change', () => {
+				if (!document.documentElement.getAttribute('data-theme')) schedule();
+			});
+	}
+</script>
+
+<style>
+	.shell {
+		padding: 0 var(--gutter);
+	}
+
+	.col {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+
+	.head {
+		padding-top: clamp(2.5rem, 7vh, 4.5rem);
+		padding-bottom: clamp(2rem, 5vh, 3rem);
+		border-bottom: 1px solid var(--line);
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0 0 1.5rem;
+		padding: 0;
+		list-style: none;
+	}
+
+	.tags li {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--muted);
+		padding: 0.28em 0.6em;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+	}
+
+	.title {
+		margin: 0;
+		font-size: clamp(2rem, 1.5rem + 3vw, 3.5rem);
+		font-weight: 700;
+		letter-spacing: -0.035em;
+		line-height: 1.03;
+	}
+
+	/* Title carries the marker at rest — the resting state of the same
+	   highlighter that swipes in on the index. */
+	.mark {
+		position: relative;
+		display: inline;
+	}
+
+	.mark::after {
+		content: '';
+		position: absolute;
+		left: -0.05em;
+		right: -0.05em;
+		bottom: 0.02em;
+		height: 0.34em;
+		z-index: -1;
+		background: #f3b5e5;
+		-webkit-mask: url('/brush.svg') no-repeat center / 100% 100%;
+		mask: url('/brush.svg') no-repeat center / 100% 100%;
+		opacity: 0.85;
+		pointer-events: none;
+	}
+
+	.dateline {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75ch;
+		margin: 1.75rem 0 0;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	.dateline .place {
+		color: var(--muted);
+	}
+
+	.dateline .sep {
+		color: #f5921f;
+	}
+
+	.prose {
+		margin-top: clamp(2.5rem, 6vh, 3.5rem);
+		max-width: 34rem;
+		font-size: 1.0625rem;
+		line-height: 1.75;
+	}
+
+	/* Drop cap in marker-pink ties the reading column to the brand. */
+	.prose :global(> p:first-of-type::first-letter) {
+		float: left;
+		margin: 0.02em 0.12em 0 0;
+		font-size: 3.4em;
+		line-height: 0.72;
+		font-weight: 700;
+		color: #d98cc4;
+	}
+
+	.prose :global(p) {
+		margin: 0 0 1.4em;
+		color: var(--text);
+	}
+
+	/* Section headings: a short marker-colored rule above marks a true break. */
+	.prose :global(h2) {
+		position: relative;
+		margin: 2.6em 0 0.9em;
+		padding-top: 1.6rem;
+		font-size: 1.375rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
+	}
+
+	.prose :global(h2)::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 2.25rem;
+		height: 3px;
+		border-radius: 2px;
+		background: #f5921f;
+	}
+
+	.prose :global(h3) {
+		margin: 1.9em 0 0.7em;
+		font-size: 1.125rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.prose :global(strong) {
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.prose :global(em) {
+		color: var(--muted);
+	}
+
+	.prose :global(a) {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: var(--accent);
+		text-decoration-thickness: 1.5px;
+		text-underline-offset: 3px;
+		transition: text-decoration-color 0.25s ease, color 0.25s ease;
+	}
+
+	.prose :global(a:hover) {
+		color: var(--accent);
+	}
+
+	.prose :global(ul),
+	.prose :global(ol) {
+		margin: 0 0 1.4em;
+		padding-left: 1.3em;
+		color: var(--text);
+	}
+
+	.prose :global(li) {
+		margin: 0.5em 0;
+		padding-left: 0.35em;
+	}
+
+	.prose :global(ul li)::marker {
+		color: #f5921f;
+	}
+
+	.prose :global(ol li)::marker {
+		color: var(--muted);
+		font-family: var(--font-mono);
+		font-size: 0.875em;
+	}
+
+	.prose :global(blockquote) {
+		margin: 1.8em 0;
+		padding: 0.2em 0 0.2em 1.25em;
+		border-left: 3px solid #f3b5e5;
+		color: var(--muted);
+		font-style: italic;
+	}
+
+	.prose :global(hr) {
+		margin: 2.5em 0;
+		border: none;
+		border-top: 1px solid var(--line);
+	}
+
+	.prose :global(code) {
+		font-family: var(--font-mono);
+		font-size: 0.875em;
+		padding: 0.15em 0.4em;
+		border-radius: 4px;
+		background: color-mix(in srgb, var(--text) 8%, transparent);
+	}
+
+	.prose :global(img) {
+		max-width: 100%;
+		height: auto;
+		border-radius: 6px;
+		margin: 1.8em 0;
+	}
+
+	/* Figures: image or chart + a small mono caption. Break out of the
+	   reading column a little so visuals get room to breathe. */
+	.prose :global(figure) {
+		margin: 2.2em 0;
+	}
+
+	.prose :global(figure img) {
+		margin: 0;
+		width: 100%;
+	}
+
+	.prose :global(figcaption) {
+		margin-top: 0.7em;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.03em;
+		line-height: 1.5;
+		color: var(--faint);
+	}
+
+	/* Inline SVG charts drop straight into the markdown as raw HTML. */
+	.prose :global(.chart) {
+		margin: 0;
+		padding: 1.4rem 1.4rem 1.1rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		background: color-mix(in srgb, var(--text) 3%, transparent);
+	}
+
+	.prose :global(.chart svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	.prose :global(.chart-title) {
+		margin: 0 0 1rem;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	/* Mermaid diagrams + wide tables break out of the narrow reading column
+	   to the full content width and scroll horizontally when they overflow. */
+	.prose :global(.mermaid-diagram),
+	.prose :global(.table-scroll) {
+		width: var(--content);
+		max-width: calc(100vw - 2 * var(--gutter));
+		margin: 2.2em 0;
+		overflow-x: auto;
+	}
+
+	.prose :global(.mermaid-diagram) {
+		padding: 1.4rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		background: color-mix(in srgb, var(--text) 3%, transparent);
+	}
+
+	/* Pre-render: hide the raw source flash; post-render mermaid sets this. */
+	.prose :global(.mermaid) {
+		margin: 0;
+		padding: 0;
+		background: none;
+		text-align: center;
+		line-height: normal;
+	}
+
+	.prose :global(.mermaid:not([data-processed])) {
+		visibility: hidden;
+	}
+
+	/* Raw Shiki-highlighted mermaid source, before the client swaps in the
+	   diagram — hidden to avoid a flash of code soup. */
+	.prose :global(pre[data-language='mermaid']) {
+		display: none;
+	}
+
+	.prose :global(.mermaid svg) {
+		max-width: 100%;
+		height: auto;
+	}
+
+	/* Markdown tables. */
+	.prose :global(.table-scroll table) {
+		border-collapse: collapse;
+		width: 100%;
+		font-size: 0.9375rem;
+		line-height: 1.5;
+	}
+
+	.prose :global(.table-scroll th),
+	.prose :global(.table-scroll td) {
+		padding: 0.5em 0.85em;
+		border: 1px solid var(--line);
+		text-align: left;
+		vertical-align: top;
+	}
+
+	.prose :global(.table-scroll th) {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+
+	/* Fenced code blocks (Shiki-highlighted). */
+	.prose :global(pre:not(.mermaid)) {
+		margin: 1.8em 0;
+		padding: 1.1rem 1.25rem;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+		overflow-x: auto;
+		font-size: 0.85rem;
+		line-height: 1.6;
+	}
+
+	.prose :global(pre:not(.mermaid) code) {
+		padding: 0;
+		background: none;
+		font-size: inherit;
+	}
+
+	/* Collapsible schema reference (§6.5). */
+	.prose :global(details) {
+		margin: 1.8em 0;
+		padding: 0.2em 1.1em;
+		border: 1px solid var(--line);
+		border-radius: 10px;
+	}
+
+	.prose :global(summary) {
+		padding: 0.7em 0;
+		cursor: pointer;
+		font-weight: 600;
+	}
+
+	.foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin: clamp(3rem, 7vh, 4.5rem) 0 clamp(4rem, 10vh, 6rem);
+		padding-top: 1.75rem;
+		border-top: 1px solid var(--line);
+	}
+
+	.back {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5ch;
+		color: var(--muted);
+		font-size: 0.9375rem;
+		text-decoration: none;
+		transition: color 0.25s ease;
+	}
+
+	.back:hover {
+		color: var(--text);
+	}
+
+	.back .arrow {
+		display: inline-block;
+		transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.back:hover .arrow {
+		transform: translateX(-0.28em);
+	}
+
+	.signoff {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+</style>

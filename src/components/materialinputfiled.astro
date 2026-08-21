@@ -1,3 +1,39 @@
 ---
-$END$
+interface Props {
+    name: string;
+    label: string;
+    id?: string;
+    type?: string;
+    maxlength?: number;
+    required?: boolean;
+    class?: string;
+}
+
+const {
+    name,
+    label,
+    id = name,
+    type = "textarea",
+    maxlength,
+    required = false,
+    class: className = "",
+} = Astro.props;
 ---
+<script>
+    import '@material/web/textfield/outlined-text-field.js';
+    import '@material/web/button/filled-button.js';
+
+</script>
+<md-outlined-text-field
+        class={`material-field ${className}`}
+        id={id}
+        name={name}
+        label={label}
+        type={type}
+        maxlength={maxlength}
+        required={required}
+        data-material-field
+></md-outlined-text-field>
+
+
+

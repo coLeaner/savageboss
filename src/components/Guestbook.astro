@@ -4,12 +4,15 @@
 // Notes render as colored sticky notes pinned to the wall; visitors can
 // doodle a tiny sketch, stamp a mood emoji, and drag notes around.
 const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
+import Materialinputfiled from "./materialinputfiled.astro";
 ---
 
 <section class="guestbook">
 	<div class="wrap">
 		<h2 class="heading" data-anim="fade">Guestbook</h2>
-		<p class="lead" data-anim="fade">Drop ya note,— leh ly world know you pass here.</p>
+		<p class="lead" data-anim="fade">Leave a note — let the world know you stopped by.</p>
+		<form>
+	     </form>
 
 		<form class="gb-form" data-gb-form autocomplete="off">
 			<div class="fields">
@@ -23,7 +26,7 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 						required
 						placeholder=" "
 					/>
-					<label class="gb-lbl" for="gb-name">Ya name</label>
+					<label class="gb-lbl" for="gb-name">Your name</label>
 				</div>
 				<div class="field">
 					<input
@@ -34,7 +37,7 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 						maxlength="280"
 						placeholder=" "
 					/>
-					<label class="gb-lbl" for="gb-message">Say something small…</label>
+					<label class="gb-lbl" for="gb-message">Say something…</label>
 				</div>
 				<button class="gb-send" type="submit" data-magnetic="0.35">Sign</button>
 			</div>
@@ -53,7 +56,7 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 			<div class="gb-pad" data-pad hidden>
 				<canvas class="gb-canvas" data-canvas width="360" height="252" aria-label="Doodle pad — draw a small sketch for your note"></canvas>
 				<div class="gb-pad-row">
-					<span class="gb-pad-hint">draw small small… it goes on ya note</span>
+					<span class="gb-pad-hint">draw something — it goes on your note</span>
 					<button type="button" class="gb-pad-clear" data-pad-clear>Clear</button>
 				</div>
 			</div>
@@ -66,6 +69,7 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 </section>
 
 <script>
+
 	import { gsap } from 'gsap';
 	import { ScrollTrigger } from 'gsap/ScrollTrigger';
 	import { Draggable } from 'gsap/Draggable';
@@ -392,17 +396,18 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 			const sig = name + '|' + message;
 			ownNotes.add(sig);
 			setTimeout(() => ownNotes.delete(sig), 15000);
-			const { error } = await supabase
+			let error: any;
+			({error} = await supabase
 				.from('guestbook')
-				.insert({ name, message, mood, doodle });
+				.insert({name, message, mood, doodle}));
 			btn && (btn.disabled = false);
 
 			if (error) {
-				say('Ay, that one failed — try again.', 'err');
+				say('That didn’t go through — try again.', 'err');
 				return;
 			}
 			form.reset();
-			say('Signed — thank ya!', 'ok');
+			say('Signed — thank you!', 'ok');
 			// Pin the fresh note to the wall right away without a round-trip.
 			const note = noteEl({
 				name,

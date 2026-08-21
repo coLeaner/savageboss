@@ -1,0 +1,237 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import BlogMasthead from '../../components/BlogMasthead.astro';
+import { readingTime, markerColors, formatDate } from '../../lib/blog';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+---
+
+<Layout
+	title="Notes — Abraham A. Sheriff"
+	description="Short thoughts on building, Liberia, and life in Paynesville City — from Abraham A. Sheriff."
+>
+	<main class="shell">
+		<div class="col">
+			<BlogMasthead />
+
+			<header class="head">
+				<p class="eyebrow">Boss Sheriff · Paynesville, Liberia</p>
+				<h1 class="title">Notes</h1>
+				<p class="lead">
+					Small small thoughts on building, Liberia, and life here — the kind of
+					things I be thinking while the code compile.
+				</p>
+			</header>
+
+			<div class="list" role="list">
+				{
+					posts.map((post, i) => (
+						<a
+							class="entry"
+							href={`/blog/${post.id}`}
+							role="listitem"
+							style={`--mk:${markerColors[i % markerColors.length]}; --i:${i}`}
+						>
+							<div class="meta">
+								<time datetime={post.data.date.toISOString()}>
+									{formatDate(post.data.date)}
+								</time>
+								<span class="sep" aria-hidden="true">/</span>
+								<span>{readingTime(post.body)} min</span>
+							</div>
+
+							<h2 class="entry-title">
+								<span class="mark">{post.data.title}</span>
+							</h2>
+
+							<p class="entry-desc">{post.data.description}</p>
+
+							{post.data.tags.length > 0 && (
+								<ul class="tags">
+									{post.data.tags.map((tag) => (
+										<li>{tag}</li>
+									))}
+								</ul>
+							)}
+						</a>
+					))
+				}
+				{
+					posts.length === 0 && (
+						<p class="empty">No notes yet — check back small.</p>
+					)
+				}
+			</div>
+		</div>
+	</main>
+</Layout>
+
+<style>
+	.shell {
+		padding: 0 var(--gutter);
+	}
+
+	.col {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+
+	.head {
+		padding-top: clamp(3rem, 9vh, 5.5rem);
+		padding-bottom: clamp(2.5rem, 6vh, 3.75rem);
+	}
+
+	.eyebrow {
+		margin: 0 0 1.25rem;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	.title {
+		margin: 0;
+		font-size: clamp(2.75rem, 2rem + 4vw, 4.5rem);
+		font-weight: 700;
+		letter-spacing: -0.04em;
+		line-height: 0.95;
+	}
+
+	.lead {
+		margin: 1.5rem 0 0;
+		max-width: 30rem;
+		color: var(--muted);
+		font-size: 1.0625rem;
+	}
+
+	.list {
+		border-top: 1px solid var(--line);
+	}
+
+	.entry {
+		display: block;
+		padding: clamp(1.75rem, 4vh, 2.5rem) 0;
+		border-bottom: 1px solid var(--line);
+		text-decoration: none;
+	}
+
+	.meta {
+		display: flex;
+		align-items: center;
+		gap: 0.75ch;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--faint);
+	}
+
+	.meta .sep {
+		color: var(--mk);
+	}
+
+	.entry-title {
+		margin: 0.9rem 0 0;
+		font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.125rem);
+		font-weight: 600;
+		letter-spacing: -0.025em;
+		line-height: 1.1;
+	}
+
+	/* Signature: a highlighter marker (same brush as the intro links + hero)
+	   rests faint under each title and swipes in on hover / keyboard focus. */
+	.mark {
+		position: relative;
+		display: inline;
+		color: var(--text);
+		transition: color 0.3s ease;
+	}
+
+	.mark::after {
+		content: '';
+		position: absolute;
+		left: -0.08em;
+		right: -0.08em;
+		bottom: -0.02em;
+		height: 0.42em;
+		z-index: -1;
+		background: var(--mk);
+		-webkit-mask: url('/brush.svg') no-repeat center / 100% 100%;
+		mask: url('/brush.svg') no-repeat center / 100% 100%;
+		opacity: 0.9;
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+		pointer-events: none;
+	}
+
+	.entry:hover .mark::after,
+	.entry:focus-visible .mark::after {
+		transform: scaleX(1);
+	}
+
+	.entry:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 0.5rem;
+		border-radius: 4px;
+	}
+
+	.entry-desc {
+		margin: 0.85rem 0 0;
+		max-width: 34rem;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 1.1rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.tags li {
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--muted);
+		padding: 0.28em 0.6em;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+	}
+
+	.empty {
+		padding: 2.5rem 0;
+		color: var(--muted);
+	}
+
+	/* Subtle staggered reveal — invites browsing, motion-safe only. */
+	@media (prefers-reduced-motion: no-preference) {
+		.entry {
+			opacity: 0;
+			transform: translateY(10px);
+			animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+			animation-delay: calc(var(--i) * 80ms + 120ms);
+		}
+
+		@keyframes rise {
+			to {
+				opacity: 1;
+				transform: none;
+			}
+		}
+	}
+
+	@media (max-width: 560px) {
+		.entry-desc {
+			font-size: 0.9375rem;
+		}
+	}
+</style>

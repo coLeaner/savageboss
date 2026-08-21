@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Intro from '../components/Intro.astro';
 import Skills from '../components/Skills.astro';
 import Work from '../components/Work.astro';
+import BlogTeaser from '../components/BlogTeaser.astro';
 import OffScreen from '../components/OffScreen.astro';
 import Hero from '../components/Hero.astro';
 import Trex from '../components/Trex.astro';
@@ -17,9 +18,10 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 			<Intro />
 			<Skills />
 			<Work />
-		</div>
-		<!-- Polaroid row breaks out wider than the reading column -->
-		<OffScreen />
+			<BlogTeaser />
+			</div>
+			<!-- Polaroid row breaks out wider than the reading column -->
+			<OffScreen />
 		<Hero />
 		<Guestbook />
 		<VisitorCount />
@@ -382,7 +384,7 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 			const flightSvg = document.querySelector('.flight');
 			const plane = document.querySelector('#plane');
 			const pathEl = document.querySelector('#flightPath');
-			let flightTween = null;
+			let flightTween: gsap.core.Tween | null = null;
 
 			const buildFlight = () => {
 				if (!flightSvg || !plane || !pathEl || !polaroids.length) return;
@@ -415,16 +417,17 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 				if (flightTween) flightTween.kill();
 				gsap.set(plane, { opacity: 0 });
 				flightTween = gsap.to(plane, {
+					placeContent: undefined,
 					duration: 20,
 					repeat: -1,
 					ease: 'none',
-					motionPath: { path: pathEl, align: pathEl, alignOrigin: [0.5, 0.5], autoRotate: true },
+					motionPath: { path: pathEl, align: pathEl, alignOrigin: [0.5, 0.5], autoRotate: true }
 				});
 				gsap.to(plane, { opacity: 1, duration: 0.6, delay: 0.1, ease: 'power1.out' });
 			};
 
 			buildFlight();
-			let flightResize;
+			let flightResize: number | undefined;
 			window.addEventListener('resize', () => {
 				clearTimeout(flightResize);
 				flightResize = setTimeout(buildFlight, 200);
@@ -640,7 +643,7 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 					let feeding = false;
 					let digestTimer: ReturnType<typeof setTimeout>;
 
-					const yummies = ['Chomp! Tanks ya! 😋', 'Mmm… sweet meat! 🤤', 'Whew… belly FULL! 🫃'];
+					const yummies = ['Chomp! Thank you! 😋', 'Mmm… tasty! 🤤', 'Phew… I’m stuffed! 🫃'];
 
 					// Little brown crumbs sprayed from the mouth on each chomp.
 					const crumbs = (x: number, y: number) => {
@@ -700,7 +703,7 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 						// Belly already full — Boss politely refuses (with a burp).
 						if (meals >= 3) {
 							wake();
-							bubble.textContent = "No more, tank ya — I'm FULL oo! 🫃";
+							bubble.textContent = "No more, thanks — I'm full! 🫃";
 							showBubble();
 							sfx('burp');
 							if (!reduced) {

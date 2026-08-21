@@ -1,0 +1,56 @@
+---
+// Slim wayfinding bar for the Notes section — brand/home on the left,
+// section label on the right. Aligned to the reading column so it clears
+// the fixed theme/sound toggles in the top-right corner.
+---
+
+<header class="masthead">
+	<a class="wordmark" href="/">
+		<span class="arrow" aria-hidden="true">←</span>
+		<span>Boss Sheriff</span>
+	</a>
+	<a class="section" href="/blog">Notes</a>
+</header>
+
+<style>
+	.masthead {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-top: clamp(1.5rem, 4vh, 2.25rem);
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.wordmark,
+	.section {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5ch;
+		color: var(--muted);
+		text-decoration: none;
+		transition: color 0.25s ease;
+	}
+
+	.wordmark:hover,
+	.section:hover {
+		color: var(--text);
+	}
+
+	.arrow {
+		display: inline-block;
+		transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.wordmark:hover .arrow {
+		transform: translateX(-0.28em);
+	}
+
+	.section {
+		color: var(--faint);
+		cursor: default;
+		pointer-events: none;
+	}
+</style>
