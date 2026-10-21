@@ -1,8 +1,6 @@
 ---
-// Footer — live local time on the left, a link to this page's own source on
+// Footer: live local time on the left, a link to this page's own source on
 // the right, with the visitor counter sitting above the rule.
-// The reference says "index.md"; this site's page really is an .astro file,
-// so the label names the file it actually opens.
 import VisitorCount from './VisitorCount.astro';
 
 const source =
@@ -18,7 +16,16 @@ const source =
 				<span class="time" data-clock>—:—:—</span> in Paynesville, Liberia
 			</p>
 
-			<a class="source" href={source} target="_blank" rel="noopener">index.astro</a>
+			{/* The joke is the point, but "steal my code" alone doesn't say where
+			    it goes — the title spells that out for anyone hovering, and for
+			    a screen reader reaching the end of the page. */}
+			<a
+				class="source"
+				href={source}
+				target="_blank"
+				rel="noopener"
+				title="View this page's source on GitHub"
+			>steal my code</a>
 		</div>
 	</div>
 </footer>

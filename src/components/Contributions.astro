@@ -7,7 +7,7 @@
 //
 //  1. GitHub's endpoint sends no CORS headers, so a page can't read it; the
 //     client version went through github-contributions-api.jogruber.de, a
-//     third-party mirror which is currently down and took the section with it.
+//     third-party mirror which went down and took the section with it.
 //  2. Fetching in the browser means the section renders, fails, and then
 //     deletes itself — a panel that appears and then vanishes. Deciding at
 //     build time means it is either in the HTML or it never was.
@@ -16,7 +16,7 @@
 // refresh it.
 const user = 'coLeaner';
 
-type Cell = { row: number; col: number; level: string; label: string };
+type Cell = { row: number; col: number; level: string; label: string; date: string };
 
 let cells: Cell[] = [];
 let total = '';
@@ -30,14 +30,16 @@ try {
 	if (!res.ok) throw new Error(String(res.status));
 	const html = await res.text();
 
-	// "845\n contributions\n in the last year"
-	const headline = html.match(
-		/js-contribution-activity-description[^>]*>\s*([\d,]+)\s*\n?\s*contributions?/
-	);
-	total = headline?.[1] ?? '';
+	// "846\n contributions\n in the last year"
+	total =
+		html.match(
+			/js-contribution-activity-description[^>]*>\s*([\d,]+)\s*\n?\s*contributions?/
+		)?.[1] ?? '';
 
 	// Each day is a <td> carrying its grid position in the id, its shade in
-	// data-level, and its wording in a <tool-tip for="<that id>">.
+	// data-level, and its wording in a <tool-tip for="<that id>">. That
+	// wording already reads "3 contributions on March 2nd." — exactly the
+	// date-and-count the hover state needs, so it's reused verbatim.
 	const tips = new Map<string, string>();
 	for (const m of html.matchAll(
 		/<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g
@@ -46,13 +48,14 @@ try {
 	}
 
 	for (const m of html.matchAll(
-		/<td[^>]*\bid="(contribution-day-component-(\d+)-(\d+))"[^>]*\bdata-level="(\d)"/g
+		/<td[^>]*\bid="(contribution-day-component-(\d+)-(\d+))"[^>]*\bdata-level="(\d)"[^>]*>/g
 	)) {
 		cells.push({
 			row: Number(m[2]),
 			col: Number(m[3]),
 			level: m[4],
 			label: tips.get(m[1]) ?? '',
+			date: m[0].match(/data-date="([^"]+)"/)?.[1] ?? '',
 		});
 	}
 } catch {
@@ -72,6 +75,36 @@ if (cells.length) {
 		);
 	}
 }
+
+// Month ruler. A label sits on the first column of each new month, which is
+// how GitHub places them. Two guards: a month starting in the last column has
+// nowhere to render, and two labels less than three columns apart collide at
+// this type size.
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Where each month first appears.
+const starts: { col: number; month: number }[] = [];
+let seen = -1;
+weeks.forEach((week, col) => {
+	const first = week.find(Boolean);
+	if (!first?.date) return;
+	const month = new Date(`${first.date}T00:00:00Z`).getUTCMonth();
+	if (month === seen) return;
+	seen = month;
+	starts.push({ col, month });
+});
+
+// Drop any month with fewer than three columns on screen: a label needs about
+// that much room, and the window opens mid-month so the first one is usually
+// a stub. Filtering on the month's own width rather than the gap to the last
+// label is what keeps the ruler contiguous — the other way round drops the
+// month *after* the stub and leaves a visible hole (Oct, Dec, Jan…).
+const months = starts
+	.filter(({ col }, i) => {
+		const end = starts[i + 1]?.col ?? weeks.length;
+		return end - col >= 3;
+	})
+	.map(({ col, month }) => ({ col, name: MONTHS[month] }));
 ---
 
 {
@@ -82,23 +115,42 @@ if (cells.length) {
 			</h2>
 
 			<div class="card" data-anim="fade">
-				<div class="scroll">
-					<div class="grid">
-						{weeks.map((week) =>
-							week.map((day) =>
-								day ? (
-									<span class="cell" data-level={day.level} title={day.label} />
-								) : (
-									/* Slots before the year opens, or after today. */
-									<span class="cell" data-level="0" data-blank />
+				<div class="scroll" data-heat-scroll>
+					<div class="calendar" style={`--weeks: ${weeks.length}`}>
+						<div class="months" aria-hidden="true">
+							{months.map((m) => (
+								<span style={`grid-column: ${m.col + 1}`}>{m.name}</span>
+							))}
+						</div>
+
+						<div class="grid" data-heat-grid>
+							{weeks.map((week) =>
+								week.map((day) =>
+									day ? (
+										<button
+											type="button"
+											class="cell"
+											data-day
+											data-level={day.level}
+											data-label={day.label || day.date}
+											title={day.label || day.date}
+											aria-label={day.label || day.date}
+											tabindex="-1"
+										/>
+									) : (
+										/* Slots before the year opens, or after today. */
+										<span class="cell" data-level="0" data-blank />
+									)
 								)
-							)
-						)}
+							)}
+						</div>
 					</div>
 				</div>
 
 				<div class="meta">
-					<p class="total">{total} contributions in the last year</p>
+					<p class="total">
+						<strong>{total}</strong> contributions in the last year
+					</p>
 					<p class="legend">
 						<span>Less</span>
 						<span class="cell" data-level="0" />
@@ -109,6 +161,11 @@ if (cells.length) {
 						<span>More</span>
 					</p>
 				</div>
+
+				{/* Hover or tap writes the day here. aria-live so a screen
+				    reader hears it, and a reserved height so the card doesn't
+				    jump the first time something is hovered. */}
+				<p class="day" data-heat-day aria-live="polite" />
 			</div>
 		</section>
 	)
@@ -127,6 +184,9 @@ if (cells.length) {
 		color: var(--text);
 	}
 
+	/* --card is a charcoal a step lighter than the page, so the card reads as
+	   a surface without a hard edge. Flat on purpose: a gradient or texture
+	   under 9px cells makes them look fuzzy. */
 	.card {
 		border: 1px solid var(--card-line);
 		border-radius: 16px;
@@ -134,20 +194,50 @@ if (cells.length) {
 		padding: 1.25rem;
 	}
 
-	/* Keep the complete year inside the card, including on phones. */
+	/* The grid holds its width and scrolls when the card is narrower — cells
+	   that shrink to fit a phone stop being readable. */
 	.scroll {
-		min-width: 0;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: thin;
+		-webkit-overflow-scrolling: touch;
+		overscroll-behavior-x: contain;
 	}
 
-	/* Every week gets the same share of the available width. */
+	.calendar {
+		min-width: 40rem;
+	}
+
+	/* One column per week. The ruler and the grid share this track list so a
+	   month label lands exactly over the week its month begins. */
+	.months,
 	.grid {
 		display: grid;
-		grid-auto-flow: column;
+		grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
+		gap: 3px;
+	}
+
+	/* The cells are emitted a week at a time (seven days, then the next
+	   week), so the grid has to fill DOWN each column. Without this it fills
+	   row-major across all 53 columns and every day lands under the wrong
+	   week — the grid still looks like a heatmap, because it's the same
+	   values reshuffled, but a cell under Aug reports a date in January. */
+	.grid {
 		grid-template-rows: repeat(7, auto);
-		grid-auto-columns: minmax(0, 1fr);
-		gap: clamp(1px, 0.35vw, 3px);
-		width: 100%;
-		min-width: 0;
+		grid-auto-flow: column;
+	}
+
+	.months {
+		margin-bottom: 0.4rem;
+		font-size: 0.6875rem;
+		line-height: 1;
+		color: var(--faint);
+	}
+
+	/* A label is wider than its 9px column, so let it run past the edge
+	   instead of wrapping to one letter a line. */
+	.months span {
+		white-space: nowrap;
 	}
 
 	.cell {
@@ -174,6 +264,30 @@ if (cells.length) {
 		background: transparent;
 	}
 
+	/* Days are buttons so they can be tapped and tabbed, but they should look
+	   like cells, not controls. */
+	button.cell {
+		padding: 0;
+		border: 0;
+		cursor: pointer;
+		-webkit-appearance: none;
+		appearance: none;
+	}
+
+	button.cell:hover,
+	button.cell:focus-visible {
+		outline: 2px solid var(--text);
+		outline-offset: 1px;
+		border-radius: 3px;
+	}
+
+	.day {
+		min-height: 1.25rem;
+		margin: 0.85rem 0 0;
+		font-size: 0.8125rem;
+		color: var(--faint);
+	}
+
 	/* The legend sits in a flex row, where auto-width cells would collapse. */
 	.legend .cell {
 		width: 11px;
@@ -191,6 +305,13 @@ if (cells.length) {
 		margin-top: 1.1rem;
 		font-size: 0.875rem;
 		color: var(--muted);
+	}
+
+	/* The number is the point of the sentence; the rest is scaffolding. */
+	.total strong {
+		color: var(--text);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.total,
@@ -214,16 +335,83 @@ if (cells.length) {
 	}
 
 	@media (max-width: 560px) {
-		.card { padding: 1rem; border-radius: 14px; }
-		.grid .cell { border-radius: 1px; }
-		.meta {
-			align-items: flex-start;
-			flex-direction: column;
-			gap: 0.65rem;
-			margin-top: 0.85rem;
-			font-size: 0.75rem;
+		.card {
+			padding: 1rem;
 		}
-		.legend { gap: 3px; }
-		.legend .cell { width: 9px; height: 9px; border-radius: 2px; }
+
+		.meta {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.6rem;
+			margin-top: 0.9rem;
+			font-size: 0.8125rem;
+		}
+
+		.legend .cell {
+			width: 9px;
+			height: 9px;
+		}
 	}
 </style>
+
+<script>
+	const scroll = document.querySelector<HTMLElement>('[data-heat-scroll]');
+	const grid = document.querySelector<HTMLElement>('[data-heat-grid]');
+	const out = document.querySelector<HTMLElement>('[data-heat-day]');
+
+	if (scroll && grid && out) {
+		const days = Array.from(grid.querySelectorAll<HTMLButtonElement>('[data-day]'));
+
+		// Roving tabindex: the grid is one stop in the tab order, not 371.
+		let current = days.length - 1;
+		days[current]?.setAttribute('tabindex', '0');
+
+		const show = (day: HTMLButtonElement) => {
+			out.textContent = day.dataset.label ?? '';
+			const next = days.indexOf(day);
+			if (next < 0 || next === current) return;
+			days[current]?.setAttribute('tabindex', '-1');
+			day.setAttribute('tabindex', '0');
+			current = next;
+		};
+
+		// Delegated rather than 371 × 3 listeners.
+		const dayFrom = (e: Event) =>
+			(e.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-day]');
+
+		grid.addEventListener('pointerover', (e) => {
+			const day = dayFrom(e);
+			if (day) out.textContent = day.dataset.label ?? '';
+		});
+		grid.addEventListener('focusin', (e) => {
+			const day = dayFrom(e);
+			if (day) show(day);
+		});
+		grid.addEventListener('click', (e) => {
+			const day = dayFrom(e);
+			if (day) show(day);
+		});
+		grid.addEventListener('pointerleave', () => {
+			out.textContent = '';
+		});
+
+		// Cells run top-to-bottom within a week, so a week is ±7 and a weekday
+		// is ±1 — the same mental model as the grid you're looking at.
+		const STEP: Record<string, number> = {
+			ArrowLeft: -7,
+			ArrowRight: 7,
+			ArrowUp: -1,
+			ArrowDown: 1,
+		};
+
+		grid.addEventListener('keydown', (e) => {
+			const step = STEP[(e as KeyboardEvent).key];
+			if (step === undefined || !dayFrom(e)) return;
+			e.preventDefault();
+			days[Math.min(days.length - 1, Math.max(0, current + step))]?.focus();
+		});
+
+		// Open on the most recent week, which is the end of the scroller.
+		scroll.scrollLeft = scroll.scrollWidth;
+	}
+</script>

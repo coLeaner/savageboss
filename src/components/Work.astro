@@ -23,38 +23,59 @@ import { Image } from 'astro:assets';
 import { products, PLACEHOLDER } from '../data/products';
 import rotaractLogo from '../assets/logos/rotaract.png';
 
-const items = [
-	...products,
+// Grouped rather than one flat list. A product, a day job, a community role
+// and a degree are different kinds of thing, and reading them as peers made
+// the section hard to scan. Grouping also retires the four stacked
+// "Building" chips: once the heading says Building, the chip on every row
+// under it is just noise (the render below drops any tag that repeats its
+// own group's name).
+const groups = [
+	{ label: 'Building', items: products },
 	{
-		title: 'Data & inventory, MAS Pharmacy',
-		note: 'Operations',
-		tag: 'Data Analytics',
-		variant: 'data',
-		icon: 'chart',
-		period: '2025 — Now',
-		fit: 'contain',
+		label: 'Work',
+		items: [
+			{
+				title: 'Data & inventory, MAS Pharmacy',
+				note: 'Operations',
+				tag: 'Data Analytics',
+				variant: 'data',
+				icon: 'chart',
+				period: '2026',
+				fit: 'contain',
+			},
+		],
 	},
 	{
-		title: 'Charter President',
-		note: 'Rotaract Club of Congo Town · Community service',
-		logo: rotaractLogo,
-		period: 'Present',
-		fit: 'contain',
+		label: 'Community',
+		items: [
+			{
+				title: 'Charter President',
+				note: 'Rotaract Club of Congo Town',
+				logo: rotaractLogo,
+				period: '2026',
+				fit: 'contain',
+			},
+			{
+				title: 'Volunteer',
+				note: 'Empowerment Squared Liberia',
+				href: 'https://liberia.empowermentsquared.org/',
+				svg: '/logos/empowerment-squared.svg',
+				period: '2026',
+				fit: 'contain',
+			},
+		],
 	},
 	{
-		title: 'Volunteer',
-		note: 'Empowerment Squared Liberia',
-		href: 'https://liberia.empowermentsquared.org/',
-		svg: '/logos/empowerment-squared.svg',
-		period: 'Present',
-		fit: 'contain',
-	},
-	{
-		title: 'BSc Information Technology',
-		note: 'BlueCrest University College',
-		icon: 'cap',
-		period: '2022 — 26',
-		fit: 'contain',
+		label: 'Education',
+		items: [
+			{
+				title: 'BSc Information Technology',
+				note: 'BlueCrest University College',
+				icon: 'cap',
+				period: '2022 — 26',
+				fit: 'contain',
+			},
+		],
 	},
 ];
 
@@ -85,7 +106,11 @@ const icons: Record<string, Part[]> = {
 
 	<div class="table">
 		{
-			items.map((item) => (
+			groups.map((group) => (
+				<div class="group">
+					<h3 class="group-label" data-anim="fade">{group.label}</h3>
+
+					{group.items.map((item) => (
 				<div class="rowline" data-anim="row">
 					<span
 						class="tile"
@@ -120,12 +145,17 @@ const icons: Record<string, Part[]> = {
 							) : (
 								item.title
 							)}
-							{item.tag && <span class:list={['tag', item.variant]}>{item.tag}</span>}
+							{/* A chip that just repeats its group heading says nothing. */}
+							{item.tag && item.tag !== group.label && (
+								<span class:list={['tag', item.variant]}>{item.tag}</span>
+							)}
 						</span>
 						<span class="note">{item.note}</span>
 					</span>
 
 					<span class="category">{item.period}</span>
+				</div>
+					))}
 				</div>
 			))
 		}
@@ -143,6 +173,20 @@ const icons: Record<string, Part[]> = {
 		font-weight: 600;
 		letter-spacing: -0.015em;
 		color: var(--text);
+	}
+
+	/* The group heading sits in the tile column's gutter so it lines up with
+	   the left edge of the section, not with the row titles — it labels the
+	   block, it isn't another row. */
+	.group + .group {
+		margin-top: 2rem;
+	}
+
+	.group-label {
+		margin: 0 0 0.35rem;
+		font-size: 0.8125rem;
+		font-weight: 400;
+		color: var(--faint);
 	}
 
 	.rowline {
