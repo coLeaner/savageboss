@@ -124,6 +124,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 	:root,
 	:root[data-theme='dark'] {
 		--bg: #0e0e10;
+		--page-texture: url('/textures/grain.svg');
 		--text: #ecEae4;
 		/* Contrast on --bg: muted 6.7:1, faint 4.7:1 — both clear WCAG AA.
 		   --line is decorative only and is exempt. */
@@ -141,7 +142,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		--card: #141417;
 		--card-line: rgba(236, 234, 228, 0.09);
 		/* Heatmap ramp: empty cell, then four steps of increasing activity. */
-		--heat-0: rgba(236, 234, 228, 0.07);
+		--heat-0: rgba(236, 234, 228, 0.045);
 		--heat-1: #0e4429;
 		--heat-2: #006d32;
 		--heat-3: #26a641;
@@ -152,6 +153,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 	/* Light palette — a warm off-white, editorial like the reference. */
 	:root[data-theme='light'] {
 		--bg: #f4f3ee;
+		--page-texture: none;
 		--text: #17171a;
 		/* Contrast on --bg: muted 6.8:1, faint 4.8:1 — both clear WCAG AA. */
 		--muted: #57564e;
@@ -168,7 +170,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		--polaroid-shadow: rgba(0, 0, 0, 0.28);
 		--card: #ffffff;
 		--card-line: rgba(20, 20, 20, 0.1);
-		--heat-0: rgba(20, 20, 20, 0.07);
+		--heat-0: rgba(20, 20, 20, 0.05);
 		--heat-1: #9be9a8;
 		--heat-2: #40c463;
 		--heat-3: #30a14e;
@@ -180,6 +182,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 	@media (prefers-color-scheme: light) {
 		:root:not([data-theme]) {
 			--bg: #f4f3ee;
+			--page-texture: none;
 			--text: #17171a;
 			--muted: #57564e;
 			--faint: #6e6c63;
@@ -193,7 +196,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 			--polaroid-shadow: rgba(0, 0, 0, 0.28);
 			--card: #ffffff;
 			--card-line: rgba(20, 20, 20, 0.1);
-			--heat-0: rgba(20, 20, 20, 0.07);
+			--heat-0: rgba(20, 20, 20, 0.05);
 			--heat-1: #9be9a8;
 			--heat-2: #40c463;
 			--heat-3: #30a14e;
@@ -215,6 +218,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 	body {
 		margin: 0;
 		background: var(--bg);
+		/* Static grain stays behind content and never intercepts interaction. */
+		background-image: var(--page-texture);
+		background-size: 192px 192px;
 		color: var(--text);
 		font-family: var(--font);
 		font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);

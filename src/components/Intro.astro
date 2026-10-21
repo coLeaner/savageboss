@@ -39,30 +39,39 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 					<path class="mark" d="M8.2 12.2l2.6 2.6 5-5.4"></path>
 				</svg>
 			</h1>
-			<p class="role">Web Developer — Paynesville, Liberia</p>
+			<p class="role">Web Developer · Paynesville, Liberia</p>
 		</div>
 	</div>
 
+	{/* Build → study → community → contact. The Work section below lists the
+	    same roles with logos, links and dates, so the bio stays short and
+	    says what the list can't: that community service is a real part of
+	    the picture, not a footnote under the code.
+
+	    The MansaStock link and the Rotaract span keep their
+	    data-photo-preview hooks: they are the only two triggers the
+	    PhotoPreview component has, and cutting them would leave it rendering
+	    stacks nothing can open. */}
 	<div class="body">
 		<p data-anim="lines">
-			I'm a web developer building simple, user-friendly digital experiences, because
-			a tool people can actually use is worth more than one that only demos well.
-		</p>
-		<p data-anim="lines">
-			Right now I'm building <a href={mansaStock} data-photo-preview="mansa" target="_blank" rel="noopener"
+			I'm a web developer building simple, user-friendly digital experiences.
+			Right now that means <a href={mansaStock} data-photo-preview="mansa" target="_blank" rel="noopener"
 				>MansaStock</a
-			>, an AI business management app that lets a company run its operations from one
-			place. I also handle the data and inventory work at MAS Pharmacy.
+			>, an AI business management app.
 		</p>
 		<p data-anim="lines">
-			Beyond tech, I serve as Charter President of the{' '}
-			<span class="preview-trigger organization" tabindex="0" data-photo-preview="rotaract">Rotaract Club of Congo Town</span>,{' '}
-			where I'm involved in community service. I also volunteer at{' '}
+			I'm also finishing a BSc in Information Technology at BlueCrest
+			University College.
+		</p>
+		<p data-anim="lines">
+			Outside tech, a lot of my time goes to community service: Charter
+			President of the{' '}
+			<span class="preview-trigger organization" tabindex="0" data-photo-preview="rotaract">Rotaract Club of Congo Town</span>{' '}
+			and a volunteer with{' '}
 			<a class="organization" href="https://liberia.empowermentsquared.org/" target="_blank" rel="noopener noreferrer">Empowerment Squared Liberia</a>.
 		</p>
 		<p data-anim="lines">
-			I'm finishing a BSc in Information Technology at BlueCrest University College.
-			You can reach me by <a href={`mailto:${email}`}>email</a>{
+			Reach me by <a href={`mailto:${email}`}>email</a>{
 				linkedin !== '#' && (
 					<>
 						{' or on '}
@@ -71,7 +80,12 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 						</a>
 					</>
 				)
-			}, or see my code on <a href={github} target="_blank" rel="noopener">GitHub</a>.
+			}, or see my code on{' '}
+			{/* SplitText re-wraps this paragraph into one div per measured line,
+			    and it treated the link and the full stop as separate units —
+			    leaving a lone "." stranded on its own line. nowrap keeps them
+			    on the same line whichever way the text breaks. */}
+			<span class="no-break"><a href={github} target="_blank" rel="noopener">GitHub</a>.</span>
 		</p>
 	</div>
 </header>
@@ -148,6 +162,10 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 
 	.body p {
 		margin: 0;
+	}
+
+	.no-break {
+		white-space: nowrap;
 	}
 
 	.body a {
