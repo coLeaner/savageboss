@@ -1,28 +1,83 @@
 ---
-// Year-grouped work list, styled like the reference: year | title (+ tag) | category.
-const groups = [
+// Work — one row per thing, laid out like the reference's writings list:
+// a tile on the left, the title and what it is in the middle, the period on
+// the right. The old left-hand year column is gone; it spent the page's
+// widest gutter on a value that repeated down four rows straight.
+//
+// A row's tile is either a product's own logo or a drawn line-art icon.
+// The logos are the real app marks, lifted from each project:
+//   MansaStock  mansa-stock/public/brand/mark-{light,dark}-256.webp
+//   BossForm    Bossform/bossform/public/branding/logo-3d.webp
+//   Habit       HabitT/HabitT/assets/icons/adaptive-icon/foreground.png
+//   Connectz    connectz.com/src/components/Logo.jsx (the inline mark)
+// Habit comes from the adaptive-icon foreground rather than icon.png: that
+// one bakes in a cream #FAF9F6 square, and the foreground layer is the same
+// art on transparency. Its Android safe-zone padding is trimmed off, or the
+// chicken sits tiny in the middle of the tile.
+// `fit` is 'cover' for a square icon that brings its own background,
+// and 'contain' for a transparent mark that needs the tile's padding to
+// breathe. The Habit art is taller than it is wide, so it is padded back out
+// to a square on export — otherwise contain fits it by height and it sits
+// smaller and off-centre next to the other two.
+import { Image } from 'astro:assets';
+import { products, PLACEHOLDER } from '../data/products';
+import rotaractLogo from '../assets/logos/rotaract.png';
+
+const items = [
+	...products,
 	{
-		year: '2025 — Now',
-		items: [
-			{ title: 'I build custom web design solutions for company', tag: 'Building', category: 'Web design', tagColor:'#006239'  },
-			{ title: ' I build Websites for institutions', category: 'Freelance' },
-			{
-				title: 'Mansastock',
-				href: 'https://mansa-stock.vercel.app',
-				tag: 'Building',
-				tagColor: '#006239',
-				category: 'Product',
-			},
-			{ title: 'Data & inventory, MAS Pharmacy', category: 'Operations', tag: 'Data Analytic', tagColor: '#006239' },
-		],
+		title: 'Data & inventory, MAS Pharmacy',
+		note: 'Operations',
+		tag: 'Data Analytics',
+		variant: 'data',
+		icon: 'chart',
+		period: '2025 — Now',
+		fit: 'contain',
 	},
 	{
-		year: '2022 — 26',
-		items: [
-			{ title: 'BSc Information Technology, BlueCrest University College', category: 'Education' },
-		],
+		title: 'Charter President',
+		note: 'Rotaract Club of Congo Town · Community service',
+		logo: rotaractLogo,
+		period: 'Present',
+		fit: 'contain',
+	},
+	{
+		title: 'Volunteer',
+		note: 'Empowerment Squared Liberia',
+		href: 'https://liberia.empowermentsquared.org/',
+		svg: '/logos/empowerment-squared.svg',
+		period: 'Present',
+		fit: 'contain',
+	},
+	{
+		title: 'BSc Information Technology',
+		note: 'BlueCrest University College',
+		icon: 'cap',
+		period: '2022 — 26',
+		fit: 'contain',
 	},
 ];
+
+// Line art only — these render at 19px, where anything filled turns to a blob.
+// Each icon is split into named parts so the CSS below can move them
+// independently when the row is hovered; `p` is the part's class.
+type Part = { d: string; p: string };
+
+const icons: Record<string, Part[]> = {
+	// Bars grow out of the baseline, one after another.
+	chart: [
+		{ d: 'M3 20.1h18', p: 'base' },
+		{ d: 'M6.4 19.6v-5.2', p: 'bar bar-1' },
+		{ d: 'M12 19.6v-9.4', p: 'bar bar-2' },
+		{ d: 'M17.6 19.6v-6.8', p: 'bar bar-3' },
+	],
+	// Mortarboard tips while the tassel swings off the corner.
+	cap: [
+		{ d: 'M12 4.2l9.3 4.4-9.3 4.4-9.3-4.4z', p: 'board' },
+		{ d: 'M6.4 10.8v4.3c0 1.6 2.5 2.8 5.6 2.8s5.6-1.2 5.6-2.8v-4.3', p: 'brim' },
+		{ d: 'M21.3 8.6v4', p: 'tassel' },
+	],
+};
 ---
 
 <section class="work">
@@ -30,31 +85,47 @@ const groups = [
 
 	<div class="table">
 		{
-			groups.map((group) => (
-				<div class="group">
-					{group.items.map((item, i) => (
-						<div class="rowline" data-anim="row">
-							<span class="year">{i === 0 ? group.year : ''}</span>
-							<span class="title">
-								{item.href ? (
-									<a href={item.href} target="_blank" rel="noopener">
-										{item.title}
-									</a>
-								) : (
-									item.title
+			items.map((item) => (
+				<div class="rowline" data-anim="row">
+					<span
+						class="tile"
+						data-icon={item.icon}
+						data-fit={item.fit}
+						aria-hidden="true"
+					>
+						{item.logo ? (
+							<>
+								<Image class:list={{ 'logo-light': 'logoDark' in item && !!item.logoDark }} src={item.logo} alt="" width={96} densities={[1, 2]} loading="lazy" />
+								{'logoDark' in item && item.logoDark && (
+									<Image class="logo-dark" src={item.logoDark} alt="" width={96} densities={[1, 2]} loading="lazy" />
 								)}
-								{item.tag &&
-									(item.tagColor ? (
-										<span class="tag" style={`background:${item.tagColor};color:#fff`}>
-											{item.tag}
-										</span>
-									) : (
-										<span class:list={['tag', item.tag.toLowerCase()]}>{item.tag}</span>
-									))}
-							</span>
-							<span class="category">{item.category}</span>
-						</div>
-					))}
+							</>
+						) : item.svg ? (
+							<img src={item.svg} alt="" width="96" height="96" data-invert={item.invert} loading="lazy" />
+						) : (
+							<svg viewBox="0 0 24 24">
+								{icons[item.icon].map((part) => (
+									<path class={part.p} d={part.d} />
+								))}
+							</svg>
+						)}
+					</span>
+
+					<span class="title">
+						<span class="head">
+							{item.href && item.href !== PLACEHOLDER ? (
+								<a href={item.href} target="_blank" rel="noopener">
+									{item.title}
+								</a>
+							) : (
+								item.title
+							)}
+							{item.tag && <span class:list={['tag', item.variant]}>{item.tag}</span>}
+						</span>
+						<span class="note">{item.note}</span>
+					</span>
+
+					<span class="category">{item.period}</span>
 				</div>
 			))
 		}
@@ -63,71 +134,199 @@ const groups = [
 
 <style>
 	.work {
-		margin-top: clamp(2.5rem, 6vh, 4rem);
+		margin-top: clamp(4rem, 11vh, 7rem);
 	}
 
 	.heading {
-		margin: 0 0 1.75rem;
-		padding-top: 1.75rem;
-		border-top: 1px solid var(--line);
-		font-size: 0.9375rem;
-		font-weight: 400;
-		color: var(--muted);
-	}
-
-	.group + .group .rowline:first-child {
-		border-top: 1px solid var(--line);
+		margin: 0 0 1.35rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: var(--text);
 	}
 
 	.rowline {
 		display: grid;
-		grid-template-columns: 6rem 1fr auto;
+		grid-template-columns: auto 1fr auto;
 		gap: 1rem;
-		align-items: baseline;
+		align-items: center;
 		padding: 0.85rem 0;
 		cursor: default;
 	}
 
-	.rowline .title,
-	.rowline .category {
-		transition: color 0.3s ease;
-	}
-
-	.rowline:hover .title,
-	.rowline:hover .category {
-		color: var(--accent);
-	}
-
-	.year {
+	.tile {
+		display: grid;
+		place-items: center;
+		width: 2.9rem;
+		height: 2.9rem;
+		border: 1px solid var(--card-line);
+		border-radius: 12px;
+		background: var(--card);
 		color: var(--faint);
-		font-size: 0.9375rem;
-		font-variant-numeric: tabular-nums;
+		transition: color 0.3s ease, border-color 0.3s ease;
+	}
+
+	/* Logo tiles: the artwork is the tile, so it loses the inner padding a
+	   line-art glyph needs. 'cover' is for an app icon that ships its own
+	   background; 'contain' is for a transparent mark. */
+	.tile img {
+		width: 100%;
+		height: 100%;
+		border-radius: inherit;
+		object-fit: contain;
+		transition: filter 0.45s ease;
+	}
+
+	.tile[data-fit='contain'] {
+		padding: 0.42rem;
+	}
+
+	.tile .logo-light { display: none; }
+	.tile .logo-dark { display: block; }
+	:global(:root[data-theme='light']) .tile .logo-light { display: block; }
+	:global(:root[data-theme='light']) .tile .logo-dark { display: none; }
+	@media (prefers-color-scheme: light) {
+		:global(:root:not([data-theme])) .tile .logo-light { display: block; }
+		:global(:root:not([data-theme])) .tile .logo-dark { display: none; }
+	}
+
+	.tile[data-fit='cover'] {
+		padding: 0;
+		overflow: hidden;
+	}
+
+	.tile[data-fit='cover'] img {
+		object-fit: cover;
+	}
+
+	/* The MansaStock mark is flat black. It needs flipping on the dark theme,
+	   and left alone on the light one — :global so Astro doesn't scope the
+	   :root part of the selector to this component and break the match. */
+	.tile img[data-invert] {
+		filter: invert(1);
+	}
+
+	:global(:root[data-theme='light']) .tile img[data-invert] {
+		filter: none;
+	}
+
+	@media (prefers-color-scheme: light) {
+		:global(:root:not([data-theme])) .tile img[data-invert] {
+			filter: none;
+		}
+	}
+
+	.tile svg {
+		width: 1.25rem;
+		height: 1.25rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		overflow: visible;
+	}
+
+	/* Every moving part shares one transition. `fill-box` is what makes a
+	   transform-origin like `bottom` resolve against the shape itself rather
+	   than the whole 24x24 canvas — without it the bars pivot off-screen. */
+	.tile svg path {
+		transform-box: fill-box;
+		transform-origin: center;
+		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+			opacity 0.3s ease;
+	}
+
+	/* The icons animate on any row hover. Unlike the colour change below,
+	   a bit of movement doesn't promise the row is clickable. */
+
+
+	/* Chart: the bars redraw themselves, staggered, like fresh numbers. */
+	.tile[data-icon='chart'] .bar {
+		transform-origin: bottom;
+	}
+
+	.rowline:hover .tile[data-icon='chart'] .bar-1 {
+		transform: scaleY(1.55);
+	}
+
+	.rowline:hover .tile[data-icon='chart'] .bar-2 {
+		transform: scaleY(0.66);
+		transition-delay: 0.06s;
+	}
+
+	.rowline:hover .tile[data-icon='chart'] .bar-3 {
+		transform: scaleY(1.3);
+		transition-delay: 0.12s;
+	}
+
+	/* Mortarboard: the board tips and the tassel swings off the corner. */
+	.tile[data-icon='cap'] .tassel {
+		transform-origin: top;
+	}
+
+	.rowline:hover .tile[data-icon='cap'] .board {
+		transform: rotate(-8deg) translateY(-0.7px);
+	}
+
+	.rowline:hover .tile[data-icon='cap'] .tassel {
+		transform: rotate(17deg);
 	}
 
 	.title {
-		color: var(--text);
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		min-width: 0;
+	}
+
+	.head {
 		display: inline-flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.6rem;
+		gap: 0.55rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+	}
+
+	.note {
+		color: var(--faint);
+		font-size: 0.875rem;
+		line-height: 1.4;
 	}
 
 	.title a {
 		color: inherit;
-		text-decoration: underline;
-		text-decoration-color: var(--faint);
-		text-underline-offset: 3px;
-		transition: text-decoration-color 0.25s ease;
-	}
-
-	.rowline:hover .title a {
-		text-decoration-color: var(--accent);
+		text-decoration: none;
 	}
 
 	.category {
 		color: var(--muted);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		text-align: right;
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	.title,
+	.category {
+		transition: color 0.3s ease;
+	}
+
+	/* Only rows that actually go somewhere react to hover. Lighting up a row
+	   that isn't clickable reads as an affordance and then dead-ends. */
+	.rowline:has(a):hover .tile {
+		color: var(--accent);
+		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+	}
+
+	.rowline:has(a):hover .title a {
+		color: var(--accent);
+	}
+
+	.rowline:has(a):hover .category {
+		color: var(--text);
 	}
 
 	.tag {
@@ -144,14 +343,16 @@ const groups = [
 		background: var(--tag-building-bg);
 	}
 
-	.tag.new {
-		color: var(--tag-new-fg);
-		background: var(--tag-new-bg);
+	.tag.data {
+		color: var(--tag-data-fg);
+		background: var(--tag-data-bg);
 	}
 
-	@media (max-width: 640px) {
+	/* Phones: the period drops under the title rather than squeezing the
+	   middle column down to two words a line. */
+	@media (max-width: 560px) {
 		.rowline {
-			grid-template-columns: 4.5rem 1fr;
+			grid-template-columns: auto 1fr;
 			row-gap: 0.15rem;
 		}
 
@@ -159,7 +360,7 @@ const groups = [
 			grid-column: 2;
 			text-align: left;
 			color: var(--faint);
+			font-size: 0.8125rem;
 		}
 	}
-
 </style>

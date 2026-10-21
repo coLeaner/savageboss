@@ -1,169 +1,178 @@
 ---
-// Intro: name, "updated" date, and three short paragraphs with inline links.
-// TODO(Abraham): replace the GitHub and LinkedIn "#" placeholders with your real URLs.
+// Profile header — avatar, name, role, then the bio as plain prose with the
+// links woven into the sentences. The old grid of social icon tiles is gone:
+// at this size a name and three underlined words say the same thing quieter.
+// TODO(Abraham): swap the LinkedIn "#" placeholder for your real profile URL.
+import { Image } from 'astro:assets';
+import avatar from '../assets/photos/profile.jpg';
+import PhotoPreview from './PhotoPreview.astro';
+
 const email = 'abrahamasheriff6@gmail.com';
-const portfolio = 'https://abesboss.netlify.app';
 const github = 'https://github.com/coLeaner';
 const linkedin = '#';
-const MansaStock = 'https://mansa-stock.vercel.app';
+const mansaStock = 'https://mansa-stock.vercel.app';
 ---
 
 <header class="intro">
-	<h1 class="name" data-anim="fade">Abraham A. Sheriff</h1>
-	<p class="updated" data-anim="fade">
-		<span class="time" data-clock aria-label="Current local time in Paynesville">—:—:—</span>
-	</p>
+	<div class="who" data-anim="fade">
+		{/* The avatar paints at 56px (3.5rem). widths cover 1x through 3x of
+		    that, because stopping at 128 left a DPR-3 phone upscaling a 2x
+		    file — the same thing that was softening the photo row. */}
+		<Image
+			class="avatar"
+			src={avatar}
+			alt="Abraham A. Sheriff"
+			width={224}
+			widths={[56, 112, 168, 224]}
+			sizes="56px"
+			quality={90}
+			loading="eager"
+		/>
+		<div class="lines">
+			<h1 class="name">
+				Abraham A. Sheriff
+				<svg class="check" viewBox="0 0 24 24" aria-label="Verified" role="img">
+					<path
+						class="seal"
+						d="m22.25 12-2.3-2.6.32-3.44-3.4-.77L15.09 2 12 3.36 8.91 2 7.13 5.19l-3.4.77.32 3.44L1.75 12l2.3 2.6-.32 3.44 3.4.77L8.91 22 12 20.64 15.09 22l1.78-3.19 3.4-.77-.32-3.44Z"
+					></path>
+					<path class="mark" d="M8.2 12.2l2.6 2.6 5-5.4"></path>
+				</svg>
+			</h1>
+			<p class="role">Web Developer — Paynesville, Liberia</p>
+		</div>
+	</div>
 
 	<div class="body">
 		<p data-anim="lines">
-			Hi, and welcome. I'm a web developer based in Paynesville City, Liberia,
-			and I create simple, user-friendly digital experiences that help businesses
-			stay focused on what matters most.
+			I'm a web developer building simple, user-friendly digital experiences, because
+			a tool people can actually use is worth more than one that only demos well.
 		</p>
 		<p data-anim="lines">
-			I am currently completing my BSc in Information Technology at <span
-				class="hl">BlueCrest University College</span>, and my work are usually associated with <span class="brushlink">
-			UX/UI, HTML, CSS, JavaScript, React,
-		</span>
-			<span class="brushlink brush-gh"> and Next.js </span>
-			 Right now, I am building <br/>
-			<span class="brushlink"><a href={MansaStock}>MansaStock</a> </span> The AI business management application, that help businesses run their entire business operations with ease,
-			and I also handle data-related
-			work at MAS Pharmacy.
+			Right now I'm building <a href={mansaStock} data-photo-preview="mansa" target="_blank" rel="noopener"
+				>MansaStock</a
+			>, an AI business management app that lets a company run its operations from one
+			place. I also handle the data and inventory work at MAS Pharmacy.
 		</p>
-		<p class="say-hi" data-anim="fade">
-			Say hello on{' '}
-			<a class="brushlink brush-gh" href={github} target="_blank" rel="noopener" data-magnetic="0.3">GitHub</a>,{' '}
-			<a class="brushlink brush-li" href={linkedin} target="_blank" rel="noopener" data-magnetic="0.3">LinkedIn</a>, my{' '}
-			<a class="brushlink brush-pf" href={portfolio} target="_blank" rel="noopener" data-magnetic="0.3">portfolio</a>, or{' '}
-			<a id="copy-email" class="brushlink brush-em" href={`mailto:${email}`} data-email={email} aria-label="Copy email address" data-magnetic="0.3"><span class="label">email</span></a>{' '}
-			let’s chat.
+		<p data-anim="lines">
+			Beyond tech, I serve as Charter President of the{' '}
+			<span class="preview-trigger organization" tabindex="0" data-photo-preview="rotaract">Rotaract Club of Congo Town</span>,{' '}
+			where I'm involved in community service. I also volunteer at{' '}
+			<a class="organization" href="https://liberia.empowermentsquared.org/" target="_blank" rel="noopener noreferrer">Empowerment Squared Liberia</a>.
+		</p>
+		<p data-anim="lines">
+			I'm finishing a BSc in Information Technology at BlueCrest University College.
+			You can reach me by <a href={`mailto:${email}`}>email</a>{
+				linkedin !== '#' && (
+					<>
+						{' or on '}
+						<a href={linkedin} target="_blank" rel="noopener">
+							LinkedIn
+						</a>
+					</>
+				)
+			}, or see my code on <a href={github} target="_blank" rel="noopener">GitHub</a>.
 		</p>
 	</div>
 </header>
 
+<PhotoPreview />
+
 <style>
 	.intro {
-		padding-top: clamp(4rem, 12vh, 8rem);
+		padding-top: clamp(2.5rem, 8vh, 4.5rem);
+	}
+
+	.who {
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+	}
+
+	.avatar {
+		flex: none;
+		width: 3.5rem;
+		height: 3.5rem;
+		border-radius: 50%;
+		object-fit: cover;
+		border: 1px solid var(--line);
+	}
+
+	.lines {
+		min-width: 0;
 	}
 
 	.name {
 		margin: 0;
-		font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
-		font-weight: 500;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.25rem);
+		font-weight: 600;
 		letter-spacing: -0.02em;
 	}
 
-	.updated {
-		margin: 0.25rem 0 0;
+	/* Scalloped seal + tick, drawn rather than imported so it inherits the
+	   accent and needs no extra request. */
+	.check {
+		display: block;
+		width: 1em;
+		height: 1em;
+		flex: none;
+	}
+
+	.check .seal {
+		fill: var(--accent);
+	}
+
+	.check .mark {
+		fill: none;
+		stroke: var(--bg);
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.role {
+		margin: 0.1rem 0 0;
 		color: var(--muted);
 		font-size: 0.9375rem;
 	}
 
-	.updated .time {
-		color: var(--text);
-		font-variant-numeric: tabular-nums;
-	}
-
-	/* Blinking colons give the ticking clock a little pulse. */
-	.updated .time :global(.c) {
-		animation: clock-blink 1s ease-in-out infinite;
-	}
-
-	@keyframes clock-blink {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.25;
-		}
-	}
-
 	.body {
-		margin-top: clamp(3rem, 8vh, 5rem);
+		margin-top: clamp(1.75rem, 5vh, 2.5rem);
 		display: flex;
 		flex-direction: column;
-		gap: 1.4em;
-		max-width: 34rem;
+		gap: 1.1em;
 	}
 
 	.body p {
 		margin: 0;
 	}
 
-	.hl {
-		color: var(--text);
+	.body a {
+		color: inherit;
+		font-weight: 500;
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-decoration-color: var(--faint);
+		text-underline-offset: 4px;
+		transition: text-decoration-color 0.25s ease, color 0.25s ease;
 	}
 
-	.body a {
-		text-decoration: underline;
-		text-decoration-color: var(--faint);
-		text-underline-offset: 3px;
-		transition: text-decoration-color 0.25s ease;
+	.body a:focus-visible, .preview-trigger:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 4px;
+		border-radius: 2px;
 	}
 
 	.body a:hover {
-		text-decoration-color: var(--text);
+		color: var(--accent);
+		text-decoration-color: var(--accent);
 	}
 
-	/* Paint-brush links: a brush stroke sweeps in behind the text on hover.
-	   --paint (0 → 1) is driven by GSAP; CSS is the reduced-motion fallback. */
-	.brushlink {
-		--paint: 1;
-		--brush: var(--accent);
-		position: relative;
-		display: inline-block;
-		isolation: isolate;
-	}
-
-	/* Each link keeps its own brush colour. */
-	.brush-gh {
-		--brush: #a371f7;
-	}
-	.brush-li {
-		--brush: #2f80ed;
-	}
-	.brush-pf {
-		--brush: #f5a623;
-	}
-	.brush-em {
-		--brush: #10b981;
-	}
-
-	.brushlink::before {
-		content: '';
-		position: absolute;
-		left: -0.18em;
-		right: -0.18em;
-		bottom: -0.05em;
-		height: 0.62em;
-		z-index: -1;
-		background: var(--brush);
-		opacity: 0.9;
-		-webkit-mask: url('/brush.svg') no-repeat center / 100% 100%;
-		mask: url('/brush.svg') no-repeat center / 100% 100%;
-		transform: scaleX(var(--paint));
-		transform-origin: left center;
-		pointer-events: none;
-	}
-
-	/* Copy-email link: clip the label so it can slide vertically on copy. */
-	#copy-email {
-		display: inline-flex;
-		overflow: hidden;
-		vertical-align: bottom;
-		line-height: 1.65;
-	}
-
-	#copy-email .label {
-		display: inline-block;
-		will-change: transform, opacity;
-	}
-	.hl {
-		color: rgb(9, 9, 214);
-		font-weight: 500;
-		font-size: 1.1rem;
-		font-bold: 500;
+	.body .organization {
+		text-decoration: none;
+		font-weight: inherit;
 	}
 </style>

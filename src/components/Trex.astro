@@ -1,55 +1,78 @@
 ---
-// A small T-Rex mascot fixed in the corner that greets visitors.
+// A small pixel-art T-Rex mascot fixed in the corner that greets visitors.
 // Animation lives in the page script (index.astro) via [data-greeter].
 ---
 
-<div class="greeter" data-greeter aria-hidden="true">
-	<div class="bubble" data-bubble>Hi, I'm Boss</div>
+{/* No aria-hidden on the wrapper: it holds two real buttons, and a focusable
+    control inside an aria-hidden subtree is a dead end for screen readers.
+    The decorative parts are hidden individually instead. */}
+<div class="greeter" data-greeter>
+	<div class="bubble" data-bubble aria-hidden="true">Hi, I'm Boss</div>
 
-	<svg class="trex" viewBox="0 0 120 120" width="66" height="66" role="img" aria-label="A friendly dinosaur waving hello">
-		<!-- tail -->
-		<path class="skin" d="M6,84 L42,68 L42,90 Z"></path>
-		<!-- back leg -->
-		<rect class="skin" x="45" y="82" width="11" height="20" rx="5"></rect>
-		<!-- body -->
-		<rect class="skin" x="34" y="50" width="54" height="42" rx="20"></rect>
-		<!-- belly -->
-		<rect class="belly" x="45" y="66" width="34" height="24" rx="12"></rect>
-		<!-- back spikes -->
-		<path class="spike" d="M39,50 l7,-9 l7,9 z"></path>
-		<path class="spike" d="M53,48 l7,-9 l7,9 z"></path>
-		<path class="spike" d="M66,44 l6,-8 l6,8 z"></path>
-		<!-- front leg -->
-		<rect class="skin" x="68" y="82" width="11" height="20" rx="5"></rect>
-		<!-- tiny arm -->
-		<rect class="skin" x="66" y="58" width="14" height="6" rx="3" transform="rotate(18 73 61)"></rect>
-		<!-- head -->
-		<rect class="skin" x="64" y="28" width="44" height="36" rx="15"></rect>
-		<!-- mouth -->
-		<path class="mouth" d="M95,53 q6,4 12,0" fill="none"></path>
-		<!-- nostril -->
-		<circle class="mouth" cx="103" cy="38" r="1.7"></circle>
-		<!-- eye -->
-		<circle class="eye" cx="92" cy="42" r="5.5" fill="#fff"></circle>
-		<circle class="pupil" cx="94" cy="42" r="2.6"></circle>
-		<!-- closed eyelid, shown only when Boss is sleeping -->
-		<path class="eyelid" d="M86.5,42 q5.5,5 11,0" fill="none" stroke-linecap="round"></path>
+	<button class="trex" type="button" aria-label="Poke Boss the dinosaur">
+	<svg viewBox="0 0 48 48" width="88" height="88" shape-rendering="crispEdges" aria-hidden="true">
+		<!-- Hand-drawn pixel companion, seated behind his laptop. -->
+		<path class="pet-shadow" d="M8 45h34v2H8z" />
+		<path class="outline" d="M13 29h18v3h3v10h-3v4H12v-3H9V33h4z" />
+		<path class="skin" d="M14 30h15v4h3v7h-3v3H13v-3h-2v-7h3z" />
+		<path class="belly" d="M16 32h10v8H16z" />
+		<path class="pet-shade" d="M12 40h9v4h-8v-2h-1m11-2h7v4h-7z" />
+		<path class="skin-light" d="M14 40h5v1h-5m11 0h4v1h-4z" />
+		<g class="boss-head">
+			<path class="outline" d="M12 2h8V1h6v1h7v2h4v3h3v4h2v10h-2v5h-4v3H12v-2H8v-3H5v-4H3v-8h2V8h3V5h4z" />
+			<path class="skin" d="M12 3h8V2h6v1h7v2h4v3h2v4h2v8h-2v5h-4v3H13v-2H9v-3H6v-4H4v-6h2V9h3V6h3z" />
+			<path class="skin-light" d="M12 3h8v2h-8M9 6h4v2H9m17-5h7v2h-7m7 2h4v2h-4" />
+			<path class="pet-shade" d="M5 19h3v4h4v2h22v-2h4v-3h2v5h-5v3H13v-2H9v-3H6z" />
+			<path class="outline" d="M15 12h17v1h3v3h1v8h-2v2H14v-1h-2V15h1v-2h2z" />
+			<path class="visor" d="M15 13h17v1h2v2h1v7h-2v2H15v-1h-2v-9h2z" />
+			<path class="happy-eyes" d="M17 21v-2h1v-1h3v1h1v2h-1v-1h-3v1zm10 0v-2h1v-1h3v1h1v2h-1v-1h-3v1z" />
+			<g class="eye">
+				<path class="eye-white" d="M17 20h1v1h3v-1h1v2h-1v1h-3v-1h-1m10-2h1v1h3v-1h1v2h-1v1h-3v-1h-1z" />
+			</g>
+			<path class="eyelid" d="M17 22h5v1h-5m10-1h5v1h-5z" />
+		</g>
+		<g class="hand-l">
+			<path class="outline" d="M10 29h5v2h3v3h-1v3h-6v-2H9v-4h1z" />
+			<path class="skin" d="M11 30h3v2h3v2h-1v2h-4v-2h-2v-3h1z" />
+			<path class="skin-light" d="M11 30h3v1h-3z" />
+		</g>
+		<g class="hand-r">
+			<path class="outline" d="M18 32h7v2h2v3H17v-3h1z" />
+			<path class="skin" d="M19 33h5v2h2v1h-8v-2h1z" />
+		</g>
+		<!-- Angled laptop lid and a luminous terminal prompt. -->
+		<path class="outline" d="M28 25h19v3l-4 14H23v-2H15v-2h9z" />
+		<path class="laptop" d="M29 26h17l-4 14H25z" />
+		<path class="laptop-edge" d="M29 26h17v1H29m-5 12h18v1H24m-8-1h8v1h-8z" />
+		<g class="code-typing">
+			<path class="code" d="M35 30h2v1h1v1h1v2h-1v1h-1v1h-2v-2h1v-2h-1z" />
+		</g>
+		<path class="code-cursor" d="M38 36h3v1h-3z" />
 	</svg>
+	</button>
 
+	<svg class="meal-heart" viewBox="0 0 9 8" width="18" height="16" aria-hidden="true" shape-rendering="crispEdges"><path fill="#fff8d9" stroke="#171715" stroke-width="0.5" d="M1 1h2v1h3V1h2v1h1v3H8v1H7v1H6v1H3V7H2V6H1V5H0V2h1z" /></svg>
 	<!-- floating zzz while Boss sleeps through the Paynesville night -->
 	<div class="zzz" aria-hidden="true"><span>z</span><span>z</span><span>z</span></div>
 
 	<!-- toss Boss a chop — logic lives in index.astro -->
-	<button class="feed" data-feed type="button" aria-label="Feed Boss" title="Feed Boss">🍖</button>
+	<button class="feed" data-feed type="button" aria-label="Feed Boss" title="Feed Boss"><svg data-food-art viewBox="0 0 24 24" width="24" height="24" shape-rendering="crispEdges" aria-hidden="true">
+			<path fill="#171715" d="M3 2h8v2h3v3h2v6h-2v3h-3v2H6v-2H3v-3H1V6h2zM14 14h3v3h3v-1h3v3h-1v3h-3v-1h-3v-3h-2z" />
+			<path fill="#aaa89e" d="M4 3h6v2h3v3h2v4h-2v3h-3v2H6v-2H4v-3H2V7h2z" />
+			<path fill="#e8e6dc" d="M4 4h5v2H5v4H3V7h1z" />
+			<path fill="#77776e" d="M11 7h2v5h-2v2H7v-2h3V9h1z" />
+			<path fill="#fff8d9" d="M15 15h1v2h2v2h2v-2h2v2h-1v2h-2v-1h-2v-2h-2z" />
+			<path fill="#55564e" d="M6 7h2v2H6m1 2h2v2H7z" />
+		</svg></button>
 </div>
 
 <style>
 	.greeter {
 		position: fixed;
-		left: 1.25rem;
-		bottom: 1.25rem;
+		left: calc(1.25rem + env(safe-area-inset-left));
+		bottom: calc(1.25rem + env(safe-area-inset-bottom));
 		z-index: 60;
-		width: 66px;
+		width: 88px;
 		pointer-events: none;
 	}
 
@@ -64,12 +87,12 @@
 		position: absolute;
 		left: calc(100% + 4px);
 		bottom: 4px;
-		width: 2.1rem;
-		height: 2.1rem;
+		width: 1.6rem;
+		height: 1.6rem;
 		display: grid;
 		place-items: center;
 		padding: 0;
-		font-size: 1.05rem;
+		font-size: 0.8rem;
 		line-height: 1;
 		border: 1px solid var(--line);
 		border-radius: 50%;
@@ -89,44 +112,75 @@
 		transform: scale(0.95);
 	}
 
+	/* Boss is a <button> now, so strip the native chrome back to bare SVG. */
 	.trex {
 		display: block;
-		overflow: visible;
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
 		cursor: pointer;
-		filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35));
+		filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
 	}
 
-	.skin {
-		fill: #5fae4e;
-		transition: fill 0.45s ease;
+	.trex svg {
+		display: block;
+		overflow: visible;
 	}
-	.belly {
-		fill: #8ccf7c;
-		transition: fill 0.45s ease;
+
+	/* --- Typing. steps(1) rather than a smooth tween: a sprite that eases
+	   between positions stops looking like pixel art. The two hands run the
+	   same loop half a beat apart, so they alternate. --- */
+	@keyframes trex-tap {
+		0%,
+		49% {
+			transform: translateY(0);
+		}
+		50%,
+		100% {
+			transform: translateY(1px);
+		}
 	}
-	.spike {
-		fill: #4c9440;
-		transition: fill 0.45s ease;
+
+	.hand-l,
+	.hand-r {
+		animation: trex-tap 0.5s steps(1, end) infinite;
 	}
-	.mouth {
-		fill: #2f6b28;
-		stroke: #2f6b28;
-		stroke-width: 2;
-		stroke-linecap: round;
-		transition: fill 0.45s ease, stroke 0.45s ease;
+
+	.hand-r {
+		animation-delay: 0.25s;
 	}
-	.pupil {
-		fill: #1a1a1a;
+
+	/* Every so often he glances up from the screen. */
+	@keyframes trex-bob {
+		0%,
+		78% {
+			transform: translateY(0);
+		}
+		80%,
+		100% {
+			transform: translateY(-1px);
+		}
+	}
+
+	.boss-head {
+		animation: trex-bob 3.4s steps(1, end) infinite;
+	}
+
+	/* Nobody types in their sleep. */
+	.greeter.sleeping .hand-l,
+	.greeter.sleeping .hand-r,
+	.greeter.sleeping .boss-head,
+	.greeter.sleeping .screen {
+		animation: none;
 	}
 
 	/* --- Sleeping mode: closed eye + floating zzz at night --- */
 	.eyelid {
 		display: none;
-		stroke: #2f6b28;
-		stroke-width: 2;
+		fill: var(--bg);
 	}
-	.trex.sleeping .eye,
-	.trex.sleeping .pupil {
+	.trex.sleeping .eye {
 		display: none;
 	}
 	.trex.sleeping .eyelid {
@@ -136,7 +190,7 @@
 	.zzz {
 		position: absolute;
 		top: -4px;
-		left: 34px;
+		left: 24px;
 		width: 0;
 		height: 0;
 		pointer-events: none;
@@ -183,20 +237,9 @@
 	}
 
 	/* Angry mode — repeated clicks turn Boss into an apex predator. */
-	.trex.angry .skin {
-		fill: #d83a2c;
-	}
-	.trex.angry .belly {
-		fill: #f2988c;
-	}
+	.trex.angry .belly,
 	.trex.angry .spike {
-		fill: #b32819;
-	}
-	.trex.angry .mouth {
-		fill: #6f1810;
-		stroke: #6f1810;
-		transform: rotate(180deg);
-		transform-origin: 101px 52px;
+		fill: var(--text);
 	}
 
 	.bubble {
@@ -237,27 +280,100 @@
 		transform: rotate(45deg);
 	}
 
-	/* Hidden until GSAP reveals — only when we can animate (no flash). */
-	html.js:not(.reduce-motion) .trex,
-	html.js:not(.reduce-motion) .bubble,
-	html.js:not(.reduce-motion) .feed {
+	/* Hidden until GSAP reveals — only when we can animate (no flash).
+	   :not(.anim-bailout) matters: without it, a page where GSAP never loads
+	   leaves Boss invisible for good, because nothing is left to reveal him.
+	   Layout.astro sets that class after 3s for exactly this case. */
+	html.js:not(.reduce-motion):not(.anim-bailout) .trex,
+	html.js:not(.reduce-motion):not(.anim-bailout) .bubble,
+	html.js:not(.reduce-motion):not(.anim-bailout) .feed {
 		opacity: 0;
 	}
 
 	@media (max-width: 560px) {
 		.greeter {
-			left: 0.85rem;
-			bottom: 0.85rem;
-			width: 54px;
+			left: calc(0.85rem + env(safe-area-inset-left));
+			bottom: calc(0.85rem + env(safe-area-inset-bottom));
+			width: 64px;
 		}
-		.trex {
-			width: 54px;
-			height: 54px;
+		.trex svg {
+			width: 64px;
+			height: auto;
 		}
 		.feed {
-			width: 1.85rem;
-			height: 1.85rem;
-			font-size: 0.9rem;
+			width: 1.4rem;
+			height: 1.4rem;
+			font-size: 0.7rem;
 		}
 	}
+
+	/* Fixed character colours preserve the reference in either page theme. */
+	.greeter {
+		--boss-ink: #171715;
+		--boss-body: #e8e6dc;
+		--boss-shade: #aaa89e;
+		--boss-light: #fffdf3;
+		--boss-accent: #fff8d9;
+	}
+	.outline { fill: var(--boss-ink); }
+	.skin { fill: var(--boss-body); }
+	.belly, .pet-shade, .spike { fill: var(--boss-shade); }
+	.skin-light { fill: var(--boss-light); }
+	.visor { fill: #151612; }
+	.laptop { fill: #55564e; }
+	.laptop-edge { fill: #d3d1c4; }
+	.eye-white, .eyelid, .code, .code-cursor { fill: var(--boss-accent); }
+	.pet-shadow { fill: #171715; opacity: 0.15; }
+	.trex { filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.18)); }
+	.trex.angry .belly, .trex.angry .spike { fill: var(--boss-body); }
+	.code-cursor { animation: boss-cursor 1s steps(1) infinite; }
+	.code-typing { animation: boss-terminal 2.8s steps(1) infinite; }
+	.eye { transform-box: fill-box; transform-origin: center; animation: boss-blink 5.2s steps(1) infinite; }
+	@keyframes boss-terminal {
+		0%, 85%, 100% { opacity: 1; }
+		90% { opacity: 0.45; }
+	}
+	@keyframes boss-blink {
+		0%, 92%, 97%, 100% { transform: scaleY(1); }
+		94%, 96% { transform: scaleY(0.25); }
+	}
+	@keyframes boss-cursor { 50% { opacity: 0; } }
+	@keyframes boss-code {
+		0%, 15% { clip-path: inset(0 100% 0 0); }
+		30% { clip-path: inset(0 65% 0 0); }
+		50% { clip-path: inset(0 30% 0 0); }
+		70%, 100% { clip-path: inset(0); }
+	}
+	@keyframes boss-tail {
+		0%, 74%, 100% { transform: translateY(0); }
+		78%, 90% { transform: translateY(-1px); }
+	}
+	.greeter.sleeping .boss-tail,
+	.greeter.sleeping .eye,
+	.greeter.sleeping .code-typing,
+	.greeter.sleeping .code-cursor { animation: none; }
+	.greeter.sleeping .code-typing { opacity: 0; }
+	.greeter.sleeping .code-muted { opacity: 0.3; }
+	.trex:focus-visible, .feed:focus-visible {
+		outline: 2px solid var(--text);
+		outline-offset: 5px;
+		border-radius: 4px;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.greeter *, .greeter *::after { animation: none !important; transition: none !important; }
+	}
+
+	.feed { width: 36px; height: 36px; border-radius: 8px; }
+	.feed svg { display: block; width: 26px; height: 26px; }
+	.feed:disabled { cursor: default; }
+	.happy-eyes { display: none; fill: var(--boss-accent); }
+	.greeter.eating .eye, .greeter.happy .eye { display: none; }
+	.greeter.eating .happy-eyes, .greeter.happy .happy-eyes { display: block; }
+	.greeter.eating .hand-l, .greeter.eating .hand-r,
+	.greeter.eating .boss-head, .greeter.eating .code-typing,
+	.greeter.eating .code-cursor { animation-play-state: paused; }
+	.meal-heart { position: absolute; left: 36px; top: -14px; opacity: 0; pointer-events: none; }
+	.greeter.happy .meal-heart { opacity: 1; animation: meal-love 1.4s ease-out both; }
+	@keyframes meal-love { from { transform: translateY(5px); } to { transform: translateY(-12px); opacity: 0; } }
+	@media (max-width: 560px) { .feed { width: 32px; height: 32px; } .feed svg { width: 24px; height: 24px; } }
 </style>

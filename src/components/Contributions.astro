@@ -1,0 +1,229 @@
+---
+// GitHub contribution heatmap.
+//
+// Fetched at BUILD TIME from GitHub's own public contributions fragment —
+// the same markup the profile page renders. Two reasons it isn't a browser
+// fetch any more:
+//
+//  1. GitHub's endpoint sends no CORS headers, so a page can't read it; the
+//     client version went through github-contributions-api.jogruber.de, a
+//     third-party mirror which is currently down and took the section with it.
+//  2. Fetching in the browser means the section renders, fails, and then
+//     deletes itself — a panel that appears and then vanishes. Deciding at
+//     build time means it is either in the HTML or it never was.
+//
+// The trade: the grid is a snapshot from the last build, not live. Rebuild to
+// refresh it.
+const user = 'coLeaner';
+
+type Cell = { row: number; col: number; level: string; label: string };
+
+let cells: Cell[] = [];
+let total = '';
+
+try {
+	const res = await fetch(`https://github.com/users/${user}/contributions`, {
+		headers: { Accept: 'text/html' },
+		// Never let someone else's slow endpoint hold a build open.
+		signal: AbortSignal.timeout(10_000),
+	});
+	if (!res.ok) throw new Error(String(res.status));
+	const html = await res.text();
+
+	// "845\n contributions\n in the last year"
+	const headline = html.match(
+		/js-contribution-activity-description[^>]*>\s*([\d,]+)\s*\n?\s*contributions?/
+	);
+	total = headline?.[1] ?? '';
+
+	// Each day is a <td> carrying its grid position in the id, its shade in
+	// data-level, and its wording in a <tool-tip for="<that id>">.
+	const tips = new Map<string, string>();
+	for (const m of html.matchAll(
+		/<tool-tip[^>]*\bfor="(contribution-day-component-\d+-\d+)"[^>]*>([^<]*)<\/tool-tip>/g
+	)) {
+		tips.set(m[1], m[2].trim());
+	}
+
+	for (const m of html.matchAll(
+		/<td[^>]*\bid="(contribution-day-component-(\d+)-(\d+))"[^>]*\bdata-level="(\d)"/g
+	)) {
+		cells.push({
+			row: Number(m[2]),
+			col: Number(m[3]),
+			level: m[4],
+			label: tips.get(m[1]) ?? '',
+		});
+	}
+} catch {
+	// Leave `cells` empty — the section renders nothing at all below.
+	cells = [];
+}
+
+// GitHub emits the grid a weekday at a time; the CSS wants it a week at a
+// time, so walk the columns and pull each week's seven days out in order.
+const weeks: (Cell | null)[][] = [];
+if (cells.length) {
+	const lastCol = Math.max(...cells.map((c) => c.col));
+	const byKey = new Map(cells.map((c) => [`${c.col}:${c.row}`, c]));
+	for (let col = 0; col <= lastCol; col++) {
+		weeks.push(
+			Array.from({ length: 7 }, (_, row) => byKey.get(`${col}:${row}`) ?? null)
+		);
+	}
+}
+---
+
+{
+	weeks.length > 0 && (
+		<section class="contrib">
+			<h2 class="heading" data-anim="fade">
+				Contributions
+			</h2>
+
+			<div class="card" data-anim="fade">
+				<div class="scroll">
+					<div class="grid">
+						{weeks.map((week) =>
+							week.map((day) =>
+								day ? (
+									<span class="cell" data-level={day.level} title={day.label} />
+								) : (
+									/* Slots before the year opens, or after today. */
+									<span class="cell" data-level="0" data-blank />
+								)
+							)
+						)}
+					</div>
+				</div>
+
+				<div class="meta">
+					<p class="total">{total} contributions in the last year</p>
+					<p class="legend">
+						<span>Less</span>
+						<span class="cell" data-level="0" />
+						<span class="cell" data-level="1" />
+						<span class="cell" data-level="2" />
+						<span class="cell" data-level="3" />
+						<span class="cell" data-level="4" />
+						<span>More</span>
+					</p>
+				</div>
+			</div>
+		</section>
+	)
+}
+
+<style>
+	.contrib {
+		margin-top: clamp(4rem, 11vh, 7rem);
+	}
+
+	.heading {
+		margin: 0 0 1.35rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: var(--text);
+	}
+
+	.card {
+		border: 1px solid var(--card-line);
+		border-radius: 16px;
+		background: var(--card);
+		padding: 1.25rem;
+	}
+
+	/* Keep the complete year inside the card, including on phones. */
+	.scroll {
+		min-width: 0;
+	}
+
+	/* Every week gets the same share of the available width. */
+	.grid {
+		display: grid;
+		grid-auto-flow: column;
+		grid-template-rows: repeat(7, auto);
+		grid-auto-columns: minmax(0, 1fr);
+		gap: clamp(1px, 0.35vw, 3px);
+		width: 100%;
+		min-width: 0;
+	}
+
+	.cell {
+		aspect-ratio: 1;
+		border-radius: 3px;
+		background: var(--heat-0);
+	}
+
+	.cell[data-level='1'] {
+		background: var(--heat-1);
+	}
+	.cell[data-level='2'] {
+		background: var(--heat-2);
+	}
+	.cell[data-level='3'] {
+		background: var(--heat-3);
+	}
+	.cell[data-level='4'] {
+		background: var(--heat-4);
+	}
+
+	/* Slots outside the year aren't days at all. */
+	.cell[data-blank] {
+		background: transparent;
+	}
+
+	/* The legend sits in a flex row, where auto-width cells would collapse. */
+	.legend .cell {
+		width: 11px;
+		height: 11px;
+		aspect-ratio: auto;
+		flex: none;
+	}
+
+	.meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-top: 1.1rem;
+		font-size: 0.875rem;
+		color: var(--muted);
+	}
+
+	.total,
+	.legend {
+		margin: 0;
+	}
+
+	.legend {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		color: var(--faint);
+	}
+
+	.legend span:first-child {
+		margin-right: 0.3rem;
+	}
+
+	.legend span:last-child {
+		margin-left: 0.3rem;
+	}
+
+	@media (max-width: 560px) {
+		.card { padding: 1rem; border-radius: 14px; }
+		.grid .cell { border-radius: 1px; }
+		.meta {
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 0.65rem;
+			margin-top: 0.85rem;
+			font-size: 0.75rem;
+		}
+		.legend { gap: 3px; }
+		.legend .cell { width: 9px; height: 9px; border-radius: 2px; }
+	}
+</style>

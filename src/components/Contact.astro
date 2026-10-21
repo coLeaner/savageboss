@@ -1,0 +1,80 @@
+---
+// Contact section — the BossForm form embedded in its own card.
+// The form is served from bossform.vercel.app and handles its own
+// submission, so there's no API route or Supabase table behind this.
+const formUrl =
+	'https://bossform.vercel.app/f/nn7e5nqpk814fjcqq5z49mwz798g6stp?bf_embed=1';
+---
+
+<section class="contact" id="contact">
+	<div class="wrap">
+		<h2 class="heading" data-anim="fade">Say hello</h2>
+		<p class="lead" data-anim="fade">
+			Work, questions, or just vibes — send it through and I'll get back to you.
+		</p>
+
+		<div class="frame" data-anim="fade">
+			{/* loading="lazy": the form sits near the bottom of a long page,
+			    so there's no reason to fetch it on first paint. */}
+			<iframe
+				src={formUrl}
+				title="Contact form"
+				loading="lazy"
+				allow="fullscreen; camera; microphone"></iframe>
+		</div>
+
+		<p class="fallback">
+			Form not loading? <a href={formUrl.replace('?bf_embed=1', '')} target="_blank" rel="noopener">Open it in a new tab</a>.
+		</p>
+	</div>
+</section>
+
+<style>
+	.contact {
+		margin: clamp(3rem, 10vh, 6rem) 0;
+	}
+
+	.wrap {
+		max-width: var(--content);
+		margin: 0 auto;
+	}
+
+	.heading {
+		font-size: clamp(1.5rem, 4vw, 2rem);
+		letter-spacing: -0.02em;
+		margin: 0 0 0.5rem;
+	}
+
+	.lead {
+		margin: 0 0 1.75rem;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+
+	.frame {
+		position: relative;
+		border: 1px solid var(--line);
+		border-radius: 14px;
+		overflow: hidden;
+		background: var(--bg);
+	}
+
+	iframe {
+		display: block;
+		width: 100%;
+		/* The embed scrolls internally, so the height only needs to be tall
+		   enough to show a couple of fields at once on any screen. */
+		height: clamp(520px, 72vh, 760px);
+		border: 0;
+	}
+
+	.fallback {
+		margin: 0.875rem 0 0;
+		font-size: 0.8125rem;
+		color: var(--faint);
+	}
+
+	.fallback a {
+		color: var(--accent);
+	}
+</style>
