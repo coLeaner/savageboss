@@ -1,46 +1,77 @@
 ---
-// Skills as a simple, minimal row of outlined cards.
-const skills = [
-	'UX/UI',
-	'HTML',
-	'CSS',
-	'JavaScript',
-	'React',
-	'Next.js',
-	'Problem-solving',
-	'Creativity',
-	'Communication',
-	'Time management',
+// Toolkit — the technical stack and the working traits, kept apart. Mixing
+// "React" and "Communication" into one undifferentiated run made the
+// technical list read as padded.
+const groups = [
+	{
+		label: 'Tech',
+		items: ['UX/UI', 'HTML', 'CSS', 'JavaScript', 'React', 'Next.js'],
+	},
+	{
+		label: 'Strengths',
+		items: ['Problem-solving', 'Creativity', 'Communication', 'Time management'],
+	},
 ];
 ---
 
-<section class="skills" aria-label="Skills">
-	<p class="label" data-anim="fade">Toolkit</p>
+<section class="skills">
+	<h2 class="heading" data-anim="fade">Toolkit</h2>
 
-	<div class="grid">
-		{
-			skills.map((s) => (
-				<article class="card" data-card data-anim="cards">
-					<span class="name">{s}</span>
-				</article>
-			))
-		}
-	</div>
+	{
+		groups.map((group) => (
+			<div class="row">
+				<h3 class="label">{group.label}</h3>
+				<ul class="grid">
+					{group.items.map((s) => (
+						<li class="card" data-card data-anim="cards">
+							<span class="name">{s}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+		))
+	}
 </section>
 
 <style>
 	.skills {
-		margin-top: clamp(3.5rem, 9vh, 5.5rem);
+		margin-top: clamp(4rem, 11vh, 7rem);
+	}
+
+	/* Same divider + weight as every other section heading. */
+	.heading {
+		margin: 0 0 1.35rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: var(--text);
+	}
+
+	/* Label column matches Work's year column, so the two sections share a
+	   left edge and the page keeps one rhythm. */
+	.row {
+		display: grid;
+		grid-template-columns: 6rem 1fr;
+		gap: 1rem;
+		align-items: baseline;
+	}
+
+	.row + .row {
+		margin-top: 1rem;
 	}
 
 	.label {
-		margin: 0 0 1.5rem;
+		margin: 0;
 		font-size: 0.9375rem;
-		color: var(--muted);
+		font-weight: 400;
+		color: var(--faint);
 	}
 
 	/* Just the words — a wrapping row, no boxes. */
 	.grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.6rem 1.5rem;
@@ -60,7 +91,21 @@ const skills = [
 		transition: color 0.3s ease;
 	}
 
+	/* Brighten toward --text, not --accent. Accent is the link colour here, and
+	   these words aren't links. */
 	.card:hover .name {
-		color: var(--accent);
+		color: var(--text);
+	}
+
+	/* Same breakpoint as Work: the label stops being a column and sits above. */
+	@media (max-width: 640px) {
+		.row {
+			grid-template-columns: 1fr;
+			gap: 0.4rem;
+		}
+
+		.row + .row {
+			margin-top: 1.5rem;
+		}
 	}
 </style>

@@ -1,8 +1,10 @@
 ---
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
+// Hashed URL for the one subset every visitor actually needs, so it can be
+// preloaded instead of waiting on the CSS to parse first.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import CursorDot from '../components/CursorDot.astro';
-import UiSounds from '../components/UiSounds.astro';
 
 interface Props {
 	title?: string;
@@ -13,6 +15,8 @@ const {
 	title = 'Abraham A. Sheriff — Web Developer',
 	description = 'Abraham A. Sheriff is a web developer based in Paynesville City, Liberia, building simple, user-friendly digital solutions.',
 } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
 <!doctype html>
@@ -22,13 +26,19 @@ const {
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
+		<link rel="canonical" href={canonical} />
+		<link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
 		<meta property="og:title" content={title} />
 		<meta property="og:description" content={description} />
 		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonical} />
 		<meta name="twitter:card" content="summary" />
+		<!-- Browser chrome matches the page background in each theme. -->
+		<meta name="theme-color" content="#0e0e10" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f4f3ee" media="(prefers-color-scheme: light)" />
 		<script is:inline>
 			// Runs before paint: flag JS + reduced-motion so CSS can hide
 			// animated elements only when we can actually animate them.
@@ -47,6 +57,16 @@ const {
 						d.setAttribute('data-font', 'mono');
 					}
 				} catch (e) {}
+
+				// Safety net for the rule above, which hides every [data-anim]
+				// until GSAP reveals it. If GSAP never gets to run — chunk
+				// blocked, a throw earlier in the script, a tab whose rAF loop
+				// is frozen — that rule would leave a permanently blank page.
+				// After 3s we un-hide unconditionally: anything GSAP already
+				// claimed carries its own inline opacity and is unaffected.
+				setTimeout(function () {
+					d.classList.add('anim-bailout');
+				}, 3000);
 			})();
 		</script>
 	</head>
@@ -62,7 +82,6 @@ const {
 		</button>
 		<slot />
 		<CursorDot />
-		<UiSounds />
 
 		<script is:inline>
 			(function () {
@@ -90,7 +109,7 @@ const {
 
 <style is:global>
 	:root {
-		--content: 44rem;
+		--content: 48rem;
 		--gutter: clamp(1.25rem, 5vw, 2rem);
 		--font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
 		--font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
@@ -106,16 +125,27 @@ const {
 	:root[data-theme='dark'] {
 		--bg: #0e0e10;
 		--text: #ecEae4;
-		--muted: #8a8880;
-		--faint: #56554f;
+		/* Contrast on --bg: muted 6.7:1, faint 4.7:1 — both clear WCAG AA.
+		   --line is decorative only and is exempt. */
+		--muted: #9b9990;
+		--faint: #7f7d76;
 		--line: rgba(236, 234, 228, 0.1);
 		--tag-building-fg: #8ab4ff;
 		--tag-building-bg: rgba(138, 180, 255, 0.14);
-		--tag-new-fg: #f5b56b;
-		--tag-new-bg: rgba(245, 181, 107, 0.14);
+		--tag-data-fg: #f5b56b;
+		--tag-data-bg: rgba(245, 181, 107, 0.14);
 		--accent: #8ab4ff;
 		--polaroid-bg: #f6f5f1;
 		--polaroid-shadow: rgba(0, 0, 0, 0.7);
+		/* Card surface used by the contributions panel and the row tiles. */
+		--card: #141417;
+		--card-line: rgba(236, 234, 228, 0.09);
+		/* Heatmap ramp: empty cell, then four steps of increasing activity. */
+		--heat-0: rgba(236, 234, 228, 0.07);
+		--heat-1: #0e4429;
+		--heat-2: #006d32;
+		--heat-3: #26a641;
+		--heat-4: #39d353;
 		color-scheme: dark;
 	}
 
@@ -123,16 +153,26 @@ const {
 	:root[data-theme='light'] {
 		--bg: #f4f3ee;
 		--text: #17171a;
-		--muted: #6f6e67;
-		--faint: #a6a49c;
+		/* Contrast on --bg: muted 6.8:1, faint 4.8:1 — both clear WCAG AA. */
+		--muted: #57564e;
+		--faint: #6e6c63;
 		--line: rgba(20, 20, 20, 0.12);
-		--tag-building-fg: #2f6fed;
+		/* Darker than the dark-theme pair: these sit on a 12%-tint chip, which
+		   lands near-white in light mode, so the text has to carry the contrast. */
+		--tag-building-fg: #1d52c2;
 		--tag-building-bg: rgba(47, 111, 237, 0.12);
-		--tag-new-fg: #b45e0c;
-		--tag-new-bg: rgba(180, 94, 12, 0.12);
-		--accent: #2f6fed;
+		--tag-data-fg: #8f4703;
+		--tag-data-bg: rgba(180, 94, 12, 0.12);
+		--accent: #2a63d6;
 		--polaroid-bg: #ffffff;
 		--polaroid-shadow: rgba(0, 0, 0, 0.28);
+		--card: #ffffff;
+		--card-line: rgba(20, 20, 20, 0.1);
+		--heat-0: rgba(20, 20, 20, 0.07);
+		--heat-1: #9be9a8;
+		--heat-2: #40c463;
+		--heat-3: #30a14e;
+		--heat-4: #216e39;
 		color-scheme: light;
 	}
 
@@ -141,16 +181,23 @@ const {
 		:root:not([data-theme]) {
 			--bg: #f4f3ee;
 			--text: #17171a;
-			--muted: #6f6e67;
-			--faint: #a6a49c;
+			--muted: #57564e;
+			--faint: #6e6c63;
 			--line: rgba(20, 20, 20, 0.12);
-			--tag-building-fg: #2f6fed;
+			--tag-building-fg: #1d52c2;
 			--tag-building-bg: rgba(47, 111, 237, 0.12);
-			--tag-new-fg: #b45e0c;
-			--tag-new-bg: rgba(180, 94, 12, 0.12);
-			--accent: #2f6fed;
+			--tag-data-fg: #8f4703;
+			--tag-data-bg: rgba(180, 94, 12, 0.12);
+			--accent: #2a63d6;
 			--polaroid-bg: #ffffff;
 			--polaroid-shadow: rgba(0, 0, 0, 0.28);
+			--card: #ffffff;
+			--card-line: rgba(20, 20, 20, 0.1);
+			--heat-0: rgba(20, 20, 20, 0.07);
+			--heat-1: #9be9a8;
+			--heat-2: #40c463;
+			--heat-3: #30a14e;
+			--heat-4: #216e39;
 			color-scheme: light;
 		}
 	}
@@ -180,15 +227,18 @@ const {
 		transition: background-color 0.45s ease, color 0.45s ease;
 	}
 
+	/* height: auto stops an <img>'s height attribute (a presentational hint
+	   Astro's <Image> always emits) from overriding CSS aspect-ratio. */
 	img {
 		max-width: 100%;
+		height: auto;
 		display: block;
 	}
 
 	#theme-toggle {
 		position: fixed;
-		top: clamp(1rem, 3vw, 1.75rem);
-		right: clamp(1rem, 3vw, 1.75rem);
+		top: calc(clamp(1rem, 3vw, 1.75rem) + env(safe-area-inset-top));
+		right: calc(clamp(1rem, 3vw, 1.75rem) + env(safe-area-inset-right));
 		z-index: 50;
 		width: 2.5rem;
 		height: 2.5rem;
@@ -245,6 +295,25 @@ const {
 		color: inherit;
 	}
 
+	/* One visible focus ring for everything interactive. :where() keeps this at
+	   zero specificity so a component can still style its own, and
+	   :focus-visible means mouse clicks don't trigger it. */
+	:where(a, button, input, textarea, canvas, summary, [tabindex]):focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 3px;
+		border-radius: 4px;
+	}
+
+	/* Kill the 300ms double-tap delay, and pick the tap flash deliberately
+	   instead of inheriting the browser's grey box. */
+	button,
+	a,
+	[data-polaroid],
+	.trex {
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 22%, transparent);
+	}
+
 	/* Food flying from the feed button into Boss's mouth (see index.astro). */
 	.food-bit {
 		position: fixed;
@@ -277,8 +346,8 @@ const {
 
 	/* Animated elements start hidden ONLY when JS is on and motion is allowed,
 	   so GSAP can reveal them without a flash. No-JS / reduce-motion = visible. */
-	html.js:not(.reduce-motion) [data-anim],
-	html.js:not(.reduce-motion) [data-fan] {
+	html.js:not(.reduce-motion):not(.anim-bailout) [data-anim],
+	html.js:not(.reduce-motion):not(.anim-bailout) [data-fan] {
 		opacity: 0;
 	}
 

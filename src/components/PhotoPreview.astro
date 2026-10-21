@@ -1,0 +1,117 @@
+---
+const previews = [
+	{ id: 'mansa', photos: ['/mansa-stock.jpeg', '/mansa-stock-2.jpeg'] },
+	{ id: 'rotaract', photos: ['/rotaract.jpeg', '/rotaract2.jpeg'] },
+];
+---
+
+<!-- Outside the bio so its animated line masks cannot clip the photos. -->
+{previews.map(({ id, photos }) => (
+	<div class="photo-preview" data-photo-stack={id} aria-hidden="true">
+		{photos.map((src) => (
+			<div class="photo-card">
+				<img src={src} alt="" width="200" height="250" loading="lazy" decoding="async" />
+			</div>
+		))}
+	</div>
+))}
+
+<script>
+	const stacks = document.querySelectorAll<HTMLElement>('[data-photo-stack]');
+	const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+	let active: HTMLElement | null = null;
+	let trigger: HTMLElement | null = null;
+
+	function hide() {
+		active?.classList.remove('is-visible');
+		active = null;
+		trigger = null;
+	}
+
+	function position(x: number, y: number, bottom: number) {
+		if (!active) return;
+		const width = active.offsetWidth;
+		const height = active.offsetHeight;
+		const left = Math.max(20, Math.min(x - width / 2, window.innerWidth - width - 20));
+		const top = y > height + 32 ? y - height - 24 : bottom + 24;
+		active.style.left = `${left}px`;
+		active.style.top = `${Math.max(20, Math.min(top, window.innerHeight - height - 20))}px`;
+	}
+
+	function show(element: HTMLElement, x?: number) {
+		const stack = Array.from(stacks).find((item) => item.dataset.photoStack === element.dataset.photoPreview);
+		if (!stack) return;
+		if (trigger !== element) hide();
+		trigger = element;
+		active = stack;
+		const rect = element.getBoundingClientRect();
+		position(x ?? rect.left + rect.width / 2, rect.top, rect.bottom);
+		stack.classList.add('is-visible');
+	}
+
+	// Delegation survives GSAP SplitText rebuilding the introduction's lines.
+	document.addEventListener('pointerover', (event) => {
+		if (!finePointer.matches || !(event.target instanceof Element)) return;
+		const element = event.target.closest<HTMLElement>('[data-photo-preview]');
+		if (element) show(element, event.clientX);
+	});
+	document.addEventListener('pointermove', (event) => {
+		if (!trigger || !active || !finePointer.matches) return;
+		const rect = trigger.getBoundingClientRect();
+		position(event.clientX, rect.top, rect.bottom);
+	});
+	document.addEventListener('pointerout', (event) => {
+		if (trigger && event.target instanceof Node && trigger.contains(event.target)
+			&& !(event.relatedTarget instanceof Node && trigger.contains(event.relatedTarget))) hide();
+	});
+	document.addEventListener('focusin', (event) => {
+		if (!(event.target instanceof HTMLElement)) return;
+		if (event.target.matches('[data-photo-preview]')) show(event.target);
+	});
+	document.addEventListener('focusout', () => hide());
+	document.addEventListener('keydown', (event) => { if (event.key === 'Escape') hide(); });
+	window.addEventListener('scroll', hide, { passive: true });
+	window.addEventListener('resize', hide, { passive: true });
+</script>
+
+<style>
+	.photo-preview {
+		position: fixed;
+		z-index: 100;
+		width: min(300px, calc(100vw - 40px));
+		height: 240px;
+		pointer-events: none;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 180ms ease, visibility 180ms;
+	}
+	.photo-preview.is-visible { opacity: 1; visibility: visible; }
+	.photo-card {
+		position: absolute;
+		top: 8px;
+		width: 64%;
+		height: 224px;
+		padding: 5px;
+		border: 1px solid rgb(255 255 255 / 15%);
+		border-radius: 12px;
+		background: #222;
+		box-shadow: 0 12px 32px rgb(0 0 0 / 28%);
+		transform: translateY(12px) rotate(-3deg) scale(0.94);
+		transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.photo-card:first-child { left: 4%; }
+	.photo-card:last-child { right: 0; transform: translateY(12px) rotate(3deg) scale(0.94); }
+	.is-visible .photo-card:first-child { transform: rotate(-9deg); }
+	.is-visible .photo-card:last-child { transform: rotate(7deg); }
+	.photo-card img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 7px;
+		filter: grayscale(1);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.photo-preview, .photo-card { transition: none; }
+	}
+</style>

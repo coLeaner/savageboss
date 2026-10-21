@@ -1,0 +1,63 @@
+---
+import { products, isLive } from '../data/products';
+---
+
+<div class="announce" data-anim="fade">
+	<nav class="pill" aria-label="My products">
+		<ul>
+			{products.map((product) => (
+				<li>
+					{isLive(product) ? (
+						<a href={product.href} target="_blank" rel="noopener noreferrer">
+							{product.title}<span class="arrow" aria-hidden="true">↗</span>
+						</a>
+					) : (
+						<span class="placeholder" title="Link coming soon">{product.title}</span>
+					)}
+				</li>
+			))}
+		</ul>
+	</nav>
+</div>
+
+<style>
+	.announce {
+		display: flex;
+		justify-content: center;
+		padding-top: clamp(1.5rem, 5vh, 2.75rem);
+	}
+	.pill {
+		max-width: 100%;
+		padding: 0.2rem 0.45rem;
+		border: 1px solid var(--line);
+		border-radius: 999px;
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+	ul {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	a, .placeholder {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.4rem 0.55rem;
+		border-radius: 999px;
+		white-space: nowrap;
+	}
+	a { color: var(--muted); text-decoration: none; }
+	a:hover { color: var(--text); }
+	a:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+	.arrow { color: var(--faint); font-size: 0.7rem; }
+	.placeholder { color: var(--faint); }
+	@media (max-width: 380px) {
+		a, .placeholder { padding-inline: 0.35rem; }
+		.arrow { display: none; }
+	}
+</style>

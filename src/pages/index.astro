@@ -6,24 +6,22 @@ import Work from '../components/Work.astro';
 import OffScreen from '../components/OffScreen.astro';
 import Hero from '../components/Hero.astro';
 import Trex from '../components/Trex.astro';
-import Guestbook from '../components/Guestbook.astro';
-import VisitorCount from '../components/VisitorCount.astro';
-import FontSwitcher from '../components/FontSwitcher.astro';
+import Contributions from '../components/Contributions.astro';
+import Footer from '../components/Footer.astro';
 ---
 
 <Layout>
 	<main class="shell">
 		<div class="col">
 			<Intro />
-			<Skills />
+			<Contributions />
 			<Work />
+			<Skills />
 		</div>
 		<!-- Polaroid row breaks out wider than the reading column -->
 		<OffScreen />
 		<Hero />
-		<Guestbook />
-		<VisitorCount />
-		<FontSwitcher />
+		<Footer />
 	</main>
 	<Trex />
 </Layout>
@@ -69,7 +67,6 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 			const shatter = () => {
 				shattering = true;
 				heat = 0;
-				(window as any).bossAudio?.play?.('shatter');
 				gsap.set(heroTags, { x: 0, y: 0, scale: 1, rotate: 0, overwrite: 'auto' });
 
 				const splits = heroTags.map((tag) => {
@@ -212,20 +209,61 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 
 			}
 
-			gsap.utils.toArray<HTMLElement>('[data-anim="fade"]').forEach((el) => {
-				intro.to(el, { opacity: 1, y: 0, duration: 0.7 }, '<0.15');
-				gsap.set(el, { y: 12 });
-			});
+			// Only the intro's own fades belong on the load timeline — they're
+			// what you see first. Every other section heading gets its own
+			// ScrollTrigger; chaining them all here meant the Guestbook heading
+			// animated while it was 4000px below the fold.
+			const fades = gsap.utils.toArray<HTMLElement>('[data-anim="fade"]');
 
-			gsap.utils.toArray<HTMLElement>('[data-anim="lines"]').forEach((el) => {
-				const split = new SplitText(el, { type: 'lines', mask: 'lines' });
+			fades
+				.filter((el) => el.closest('.intro'))
+				.forEach((el) => {
+					gsap.set(el, { y: 12 });
+					intro.to(el, { opacity: 1, y: 0, duration: 0.7 }, '<0.15');
+				});
+
+			fades
+				.filter((el) => !el.closest('.intro'))
+				.forEach((el) => {
+					gsap.fromTo(
+						el,
+						{ opacity: 0, y: 12 },
+						{
+							opacity: 1,
+							y: 0,
+							duration: 0.7,
+							ease,
+							scrollTrigger: { trigger: el, start: 'top 88%' },
+						}
+					);
+				});
+
+			// autoSplit re-measures the line breaks when the viewport changes —
+			// without it a phone rotation leaves text reflowing inside masks
+			// that were measured for the old width. The reveal itself only plays
+			// on the first split; replaying it on every resize would re-animate
+			// copy the visitor has already read.
+			let firstSplit = true;
+			gsap.utils.toArray<HTMLElement>('[data-anim="lines"]').forEach((el, i) => {
 				gsap.set(el, { opacity: 1 });
-				intro.from(
-					split.lines,
-					{ yPercent: 100, opacity: 0, duration: 0.9, stagger: 0.08 },
-					'<0.1'
-				);
+				SplitText.create(el, {
+					type: 'lines',
+					mask: 'lines',
+					autoSplit: true,
+					onSplit: (self) =>
+						firstSplit
+							? gsap.from(self.lines, {
+									yPercent: 100,
+									opacity: 0,
+									duration: 0.9,
+									stagger: 0.08,
+									ease,
+									delay: 0.35 + i * 0.12,
+								})
+							: gsap.set(self.lines, { yPercent: 0, opacity: 1 }),
+				});
 			});
+			firstSplit = false;
 
 			// --- Skills grid: staggered entrance on scroll ---
 			const cards = gsap.utils.toArray<HTMLElement>('[data-anim="cards"]');
@@ -239,7 +277,10 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 						duration: 0.6,
 						ease,
 						stagger: { each: 0.05, from: 'start' },
-						scrollTrigger: { trigger: '.grid', start: 'top 85%' },
+						// Trigger on the section, not '.grid' — there are two
+						// grids now (Tech / Strengths) and toArray() would only
+						// ever watch the first.
+						scrollTrigger: { trigger: '.skills', start: 'top 85%' },
 					}
 				);
 			}
@@ -269,22 +310,10 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 				);
 			});
 
-			// --- "Say hi" links: brush stays visible, re-strokes + lifts on hover ---
-			gsap.utils.toArray<HTMLElement>('.brushlink').forEach((link) => {
-				link.addEventListener('mouseenter', () => {
-					gsap.fromTo(
-						link,
-						{ '--paint': 0 },
-						{ '--paint': 1, duration: 0.45, ease: 'power2.out', overwrite: 'auto' }
-					);
-				});
-				link.addEventListener('mouseleave', () =>
-					gsap.to(link, { '--paint': 1, duration: 0.25, ease: 'power2.in' })
-				);
-			});
-
 			// --- Work rows: GSAP slide on hover (color handled by CSS) ---
-			gsap.utils.toArray<HTMLElement>('.rowline').forEach((row) => {
+			// Scoped to rows containing a link: sliding a row that isn't
+			// clickable promises something the row can't deliver.
+			gsap.utils.toArray<HTMLElement>('.rowline:has(a)').forEach((row) => {
 				const title = row.querySelector<HTMLElement>('.title');
 				const cat = row.querySelector<HTMLElement>('.category');
 				if (!title) return;
@@ -305,29 +334,98 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 			if (fan && polaroids.length) {
 				gsap.set(fan, { opacity: 1 });
 				const mid = (polaroids.length - 1) / 2;
-				// Spread the whole fan across a fixed ~34° arc regardless of count.
-				const step = polaroids.length > 1 ? 34 / (polaroids.length - 1) : 0;
+				// A 40° ring: every card sits on the circumference of one
+				// circle whose centre is well below the row, each rotated
+				// tangentially so it leans away from the middle. The end cards
+				// land at ±20° for a flatter spread.
+				const ARC = 40;
+				const step = polaroids.length > 1 ? ARC / (polaroids.length - 1) : 0;
 
-				polaroids.forEach((card, i) => {
-					const offset = i - mid;
-					gsap.set(card, {
-						rotate: 0,
-						x: -offset * 45,
-						y: 40,
-						opacity: 0,
-						transformOrigin: 'bottom center',
+				fan.classList.add('circled');
+
+				// Transforms don't affect layout, so the row has to be told how
+				// tall the ring is or it overlaps whatever follows it.
+				//
+				// Derived from the card box rather than measured: reading back
+				// the rotated bounding boxes proved unreliable. The photos carry
+				// an aspect-ratio (see OffScreen.astro), so an untransformed
+				// card has its final height before any image has loaded.
+				const layout = () => {
+					const w = polaroids[0].offsetWidth;
+					const h = polaroids[0].offsetHeight;
+
+					// The pivot distance is the circle's radius, and it's what
+					// sets how far apart the cards sit: neighbours are a chord
+					// 2·r·sin(step/2) apart, so a bigger circle opens the fan up
+					// without changing its spread in degrees.
+					//
+					// Use 85% of the row's available width for a relaxed horizontal spread:
+					// 2·r·sin(half) plus one card, with a little air at each edge.
+					const half = (ARC / 2) * (Math.PI / 180);
+					const radius = Math.max(0, (fan.clientWidth - w - 32) / (2 * Math.sin(half))) * 0.85;
+
+					// Lowest point any corner reaches once every card is rotated
+					// into place. Corners are relative to the pivot, which sits
+					// `radius` below the card's top edge.
+					const corners = [
+						[-w / 2, -radius],
+						[w / 2, -radius],
+						[-w / 2, h - radius],
+						[w / 2, h - radius],
+					];
+
+					let lowest = 0;
+					polaroids.forEach((_, i) => {
+						const a = ((i - mid) * step * Math.PI) / 180;
+						for (const [x, y] of corners) {
+							lowest = Math.max(
+								lowest,
+								radius + x * Math.sin(a) + y * Math.cos(a)
+							);
+						}
 					});
+
+					fan.style.setProperty('--fan-h', `${Math.ceil(lowest)}px`);
+					polaroids.forEach((card) =>
+						gsap.set(card, { transformOrigin: `50% ${radius}px` })
+					);
+				};
+
+				// Stacked start state, then size the row around it.
+				polaroids.forEach((card) => {
+					gsap.set(card, { xPercent: -50, rotate: 0, y: 40, opacity: 0 });
 				});
+				layout();
+				window.addEventListener('resize', layout);
 
 				gsap.to(polaroids, {
 					rotate: (i) => (i - mid) * step,
-					y: (i) => Math.abs(i - mid) * 6,
-					x: 0,
+					y: 0,
 					opacity: 1,
-					duration: 1,
+					duration: 1.1,
 					ease: 'power3.out',
 					stagger: 0.07,
 					scrollTrigger: { trigger: fan, start: 'top 82%' },
+					// The labels ride on rotated cards; undo the rotation so
+					// they stay level and readable at the ends of the arc.
+					onStart: () =>
+						polaroids.forEach((card, i) => {
+							const tip = card.querySelector<HTMLElement>('.tip');
+							if (tip) gsap.set(tip, { rotate: -(i - mid) * step });
+						}),
+				});
+
+				// The outer card keeps its fan pivot and stable hover area.
+				// Only the inner frame lifts and scales around its own centre.
+				polaroids.forEach((card) => {
+					const frame = card.querySelector<HTMLElement>('.photo-frame');
+					if (!frame) return;
+					card.addEventListener('mouseenter', () => {
+						gsap.to(frame, { scale: 1.08, y: -8, duration: 0.3, ease: 'power3.out', overwrite: 'auto' });
+					});
+					card.addEventListener('mouseleave', () => {
+						gsap.to(frame, { scale: 1, y: 0, duration: 0.35, ease: 'power3.out', overwrite: 'auto' });
+					});
 				});
 
 				// Hover label pill: pop up above each polaroid.
@@ -468,22 +566,28 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 			let clicks = 0;
 			let calmTimer: ReturnType<typeof setTimeout>;
 
-			// Colour shifts one step warmer on every poke, up to angry red.
+			// Boss is black and white now, so poking him can't warm him up
+			// through lime to red. He tenses instead: the belly and spikes
+			// close the gap to the body colour until he's one stark silhouette.
+			// (These are inline fills, so they have to be theme tokens or they
+			// would override the CSS in Trex.astro and stick on one theme.)
 			const skins = trex.querySelectorAll<SVGElement>('.skin');
 			const belly = trex.querySelector<SVGElement>('.belly');
 			const spikes = trex.querySelectorAll<SVGElement>('.spike');
+			const shade = (pct: number) =>
+				`color-mix(in srgb, var(--boss-shade) ${pct}%, var(--boss-body))`;
 			const levels = [
-				null, // 0: default green (from CSS)
-				{ s: '#8fbf3f', b: '#c3e07f', k: '#78a52f' }, // lime
-				{ s: '#e0b52e', b: '#f2d98a', k: '#c19620' }, // amber
-				{ s: '#e8792a', b: '#f4b184', k: '#c25f18' }, // orange
-				{ s: '#d83a2c', b: '#f2988c', k: '#b32819' }, // angry red
+				null, // 0: resting — straight from the CSS
+				shade(75),
+				shade(50),
+				shade(25),
+				shade(0), // flat: belly and spikes vanish into the body
 			];
 			const paint = (level: number) => {
 				const c = levels[level];
-				skins.forEach((e) => (e.style.fill = c ? c.s : ''));
-				if (belly) belly.style.fill = c ? c.b : '';
-				spikes.forEach((e) => (e.style.fill = c ? c.k : ''));
+				skins.forEach((e) => (e.style.fill = ''));
+				if (belly) belly.style.fill = c ?? '';
+				spikes.forEach((e) => (e.style.fill = c ?? ''));
 			};
 
 			const showBubble = () =>
@@ -635,7 +739,6 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 				// --- Feeding: visitors toss Boss a chop; he chomps and his belly grows ---
 				const feedBtn = greeter.querySelector<HTMLButtonElement>('[data-feed]');
 				if (feedBtn) {
-					const sfx = (name: string) => (window as any).bossAudio?.play?.(name);
 					let meals = 0;
 					let feeding = false;
 					let digestTimer: ReturnType<typeof setTimeout>;
@@ -668,17 +771,19 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 
 					const setBelly = () => {
 						if (!belly) return;
-						const props = { scale: 1 + meals * 0.13, svgOrigin: '62 78' };
+						const props = { scale: 1 + meals * 0.13, svgOrigin: '21 36' };
 						if (reduced) gsap.set(belly, props);
 						else gsap.to(belly, { ...props, duration: 0.45, ease: 'back.out(2)' });
 					};
 
 					const finishMeal = () => {
+						greeter.classList.remove('eating');
+						greeter.classList.add('happy');
+						feedBtn.disabled = false;
+						setTimeout(() => greeter.classList.remove('happy'), 1600);
 						meals++;
 						setBelly();
-						sfx('chomp');
-						setTimeout(() => sfx('gulp'), 280);
-						bubble.textContent = yummies[Math.min(meals - 1, yummies.length - 1)];
+						bubble.textContent = "Thanks! Back to building.";
 						showBubble();
 						feeding = false;
 						clearTimeout(digestTimer);
@@ -697,12 +802,11 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 						if (feeding) return;
 						clearTimeout(calmTimer);
 
-						// Belly already full — Boss politely refuses (with a burp).
+						// Belly already full — Boss politely refuses.
 						if (meals >= 3) {
 							wake();
 							bubble.textContent = "No more, tank ya — I'm FULL oo! 🫃";
 							showBubble();
-							sfx('burp');
 							if (!reduced) {
 								gsap.fromTo(
 									trex,
@@ -728,7 +832,9 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 						calmDown();
 						wake();
 						feeding = true;
-						sfx('pop');
+						feedBtn.disabled = true;
+						greeter.classList.remove('happy');
+						greeter.classList.add('eating');
 
 						if (reduced) {
 							finishMeal();
@@ -738,11 +844,12 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 						// A chop arcs from the button into Boss's mouth, then he chews.
 						const food = document.createElement('div');
 						food.className = 'food-bit';
-						food.textContent = '🍖';
+						const foodArt = feedBtn.querySelector('[data-food-art]');
+						if (foodArt) food.appendChild(foodArt.cloneNode(true));
 						document.body.appendChild(food);
 						const from = feedBtn.getBoundingClientRect();
 						const rect = trex.getBoundingClientRect();
-						const mouthX = rect.left + rect.width * 0.82;
+						const mouthX = rect.left + rect.width * 0.5;
 						const mouthY = rect.top + rect.height * 0.42;
 						gsap.set(food, {
 							x: from.left + from.width / 2,
@@ -777,10 +884,10 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 										repeat: 3,
 										yoyo: true,
 										ease: 'power1.inOut',
-										onComplete: () => gsap.to(trex, { scale: 1, duration: 0.3, ease: 'back.out(3)' }),
+										onComplete: () => gsap.to(trex, { scale: 1, duration: 0.3, ease: 'back.out(3)', onComplete: finishMeal }),
 									}
 								);
-								finishMeal();
+
 							},
 						});
 					});
@@ -820,67 +927,4 @@ import FontSwitcher from '../components/FontSwitcher.astro';
 		}
 	}
 
-	// --- Click-to-copy email (runs regardless of motion preference) ---
-	const copyEl = document.getElementById('copy-email');
-	if (copyEl) {
-		const label = copyEl.querySelector<HTMLElement>('.label');
-		const email = copyEl.getAttribute('data-email') || '';
-		let busy = false;
-
-		async function copyText(text: string) {
-			try {
-				await navigator.clipboard.writeText(text);
-			} catch {
-				const ta = document.createElement('textarea');
-				ta.value = text;
-				ta.style.position = 'fixed';
-				ta.style.opacity = '0';
-				document.body.appendChild(ta);
-				ta.select();
-				try {
-					document.execCommand('copy');
-				} catch {}
-				ta.remove();
-			}
-		}
-
-		copyEl.addEventListener('click', async (e) => {
-			e.preventDefault();
-			if (busy || !label) return;
-			busy = true;
-			await copyText(email);
-
-			if (reduced) {
-				label.textContent = 'Copied!';
-				setTimeout(() => {
-					label.textContent = 'email';
-					busy = false;
-				}, 1400);
-				return;
-			}
-
-			// "email" slides up out, "Copied!" slides up in, then reverses back.
-			gsap
-				.timeline({ onComplete: () => (busy = false) })
-				.to(label, {
-					yPercent: -120,
-					opacity: 0,
-					duration: 0.22,
-					ease: 'power2.in',
-					onComplete: () => (label.textContent = 'Copied!'),
-				})
-				.set(label, { yPercent: 120 })
-				.to(label, { yPercent: 0, opacity: 1, duration: 0.32, ease: 'power2.out' })
-				.to(label, {
-					yPercent: -120,
-					opacity: 0,
-					duration: 0.22,
-					ease: 'power2.in',
-					delay: 1.2,
-					onComplete: () => (label.textContent = 'email'),
-				})
-				.set(label, { yPercent: 120 })
-				.to(label, { yPercent: 0, opacity: 1, duration: 0.32, ease: 'power2.out' });
-		});
-	}
 </script>

@@ -9,7 +9,7 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 <section class="guestbook">
 	<div class="wrap">
 		<h2 class="heading" data-anim="fade">Guestbook</h2>
-		<p class="lead" data-anim="fade">Drop your note, let the world know you pass here.</p>
+		<p class="lead" data-anim="fade">Drop a note — let the world know you were here.</p>
 
 		<form class="gb-form" data-gb-form autocomplete="off">
 			<div class="fields">
@@ -21,19 +21,22 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 						type="text"
 						maxlength="40"
 						required
+						autocomplete="name"
+						spellcheck="false"
 						placeholder=" "
 					/>
 					<label class="gb-lbl" for="gb-name">Your name</label>
 				</div>
 				<div class="field">
-					<input
+					{/* A textarea, not an input: 280 characters in a one-line field
+					    means you can't see what you already wrote. */}
+					<textarea
 						class="gb-input gb-msg"
 						id="gb-message"
 						name="message"
-						type="text"
 						maxlength="280"
-						placeholder=" "
-					/>
+						rows="2"
+						placeholder=" "></textarea>
 					<label class="gb-lbl" for="gb-message">Say something</label>
 				</div>
 				<button class="gb-send" type="submit" data-magnetic="0.35">Sign</button>
@@ -51,9 +54,27 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 			</div>
 
 			<div class="gb-pad" data-pad hidden>
-				<canvas class="gb-canvas" data-canvas width="360" height="252" aria-label="Doodle pad — draw a small sketch for your note"></canvas>
+				{/* role="application" so arrow keys reach the canvas instead of
+				    being swallowed by a screen reader's browse mode — this is
+				    the case that role exists for: a widget with its own
+				    keyboard interaction that has no native equivalent. */}
+				<div class="gb-canvas-wrap">
+					<canvas
+						class="gb-canvas"
+						data-canvas
+						width="360"
+						height="252"
+						tabindex="0"
+						role="application"
+						aria-label="Doodle pad — draw a small sketch for your note"
+						aria-describedby="gb-pad-hint"></canvas>
+					<span class="gb-caret" data-caret aria-hidden="true" hidden></span>
+				</div>
 				<div class="gb-pad-row">
-					<span class="gb-pad-hint">Show your drawing skill small. it will go on your  note</span>
+					<span class="gb-pad-hint" id="gb-pad-hint">
+						Drag to draw, or focus the pad and steer with the arrow keys —
+						space puts the pen down and lifts it again.
+					</span>
 					<button type="button" class="gb-pad-clear" data-pad-clear>Clear</button>
 				</div>
 			</div>
@@ -61,7 +82,10 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 			<p class="gb-status" data-gb-status role="status" aria-live="polite"></p>
 		</form>
 
-		<ul class="gb-list" data-gb-list aria-live="polite"></ul>
+		{/* Deliberately not a live region: the initial load replaces all 40
+		    notes at once, which a screen reader would read out end to end.
+		    Submit feedback goes through .gb-status instead. */}
+		<ul class="gb-list" data-gb-list></ul>
 	</div>
 </section>
 
@@ -182,9 +206,75 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 		canvas?.addEventListener(ev, () => (drawing = false))
 	);
 
+	// --- Keyboard drawing ---
+	// The pad is pointer-first, but without this a keyboard user tabs to the
+	// "Doodle" toggle, opens it, and finds a panel with nothing operable in it.
+	// Arrows steer the pen (Shift for bigger steps), space puts it down.
+	const caret = document.querySelector<HTMLElement>('[data-caret]');
+	let penX = canvas ? canvas.width / 2 : 0;
+	let penY = canvas ? canvas.height / 2 : 0;
+	let penDown = false;
+
+	function drawCaret() {
+		if (!caret || !canvas) return;
+		caret.style.left = `${(penX / canvas.width) * 100}%`;
+		caret.style.top = `${(penY / canvas.height) * 100}%`;
+		caret.dataset.down = penDown ? '1' : '';
+	}
+
+	canvas?.addEventListener('focus', () => {
+		if (caret) caret.hidden = false;
+		drawCaret();
+	});
+
+	canvas?.addEventListener('blur', () => {
+		penDown = false;
+		if (caret) caret.hidden = true;
+	});
+
+	canvas?.addEventListener('keydown', (e) => {
+		if (!ink || !canvas) return;
+
+		const step = e.shiftKey ? 24 : 8;
+		const dx = Number(e.key === 'ArrowRight') - Number(e.key === 'ArrowLeft');
+		const dy = Number(e.key === 'ArrowDown') - Number(e.key === 'ArrowUp');
+
+		if (dx || dy) {
+			e.preventDefault();
+			penX = Math.max(0, Math.min(canvas.width, penX + dx * step));
+			penY = Math.max(0, Math.min(canvas.height, penY + dy * step));
+			if (penDown) {
+				ink.lineTo(penX, penY);
+				ink.stroke();
+			}
+			drawCaret();
+			return;
+		}
+
+		// Enter would otherwise submit the form this pad sits inside.
+		if (e.key === ' ' || e.key === 'Enter') {
+			e.preventDefault();
+			penDown = !penDown;
+			if (penDown) {
+				dirty = true;
+				ink.beginPath();
+				ink.moveTo(penX, penY);
+				ink.lineTo(penX + 0.1, penY + 0.1); // pen down alone leaves a dot
+				ink.stroke();
+			}
+			drawCaret();
+		}
+	});
+
 	function clearPad() {
 		if (ink && canvas) ink.clearRect(0, 0, canvas.width, canvas.height);
 		dirty = false;
+		penDown = false;
+		if (canvas) {
+			penX = canvas.width / 2;
+			penY = canvas.height / 2;
+		}
+		drawCaret();
 	}
 	padClear?.addEventListener('click', clearPad);
 
@@ -195,15 +285,17 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 		padToggle.textContent = pad.hidden ? '✏️ Doodle' : '✏️ Doodle — on';
 	});
 
-	// Shrink the sketch to note size so the stored PNG stays tiny.
-	function exportDoodle(): string | null {
+	// Shrink the sketch to note size so the stored PNG stays tiny. Returns
+	// 'too-big' rather than null when the drawing blows the size cap, so the
+	// caller can say so instead of silently dropping someone's sketch.
+	function exportDoodle(): string | 'too-big' | null {
 		if (!dirty || !canvas || pad?.hidden) return null;
 		const out = document.createElement('canvas');
 		out.width = 180;
 		out.height = 126;
 		out.getContext('2d')!.drawImage(canvas, 0, 0, out.width, out.height);
 		const url = out.toDataURL('image/png');
-		return url.length <= 24000 ? url : null;
+		return url.length <= 24000 ? url : 'too-big';
 	}
 
 	// --- Drag notes around the wall (never saved — just playful) ---
@@ -346,7 +438,6 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 					list!.prepend(note);
 					makeDraggable(note);
 					stickIn([note]);
-					(window as any).bossAudio?.play?.('pop');
 				}
 			)
 			.subscribe();
@@ -380,7 +471,12 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 			const fd = new FormData(form);
 			const name = String(fd.get('name') || '').trim();
 			const message = String(fd.get('message') || '').trim();
-			const doodle = exportDoodle();
+			const sketch = exportDoodle();
+			if (sketch === 'too-big') {
+				say('That sketch has too much detail to save — simplify it or hit Clear.', 'err');
+				return;
+			}
+			const doodle = sketch;
 			if (!name) return;
 			if (!message && !doodle) {
 				say('Write something or doodle something 🙃', 'err');
@@ -435,12 +531,11 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 	}
 
 	.heading {
-		margin: 0 0 0.5rem;
-		padding-top: 1.75rem;
-		border-top: 1px solid var(--line);
-		font-size: 0.9375rem;
-		font-weight: 400;
-		color: var(--muted);
+		margin: 0 0 1.35rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: var(--text);
 	}
 
 	.lead {
@@ -480,6 +575,15 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 		min-width: 0;
 	}
 
+	textarea.gb-input {
+		display: block;
+		resize: vertical;
+		min-height: 4.4rem;
+		line-height: 1.5;
+	}
+
+	/* The animated accent underline below is the focus indicator here, which is
+	   why removing the native ring is safe. */
 	.gb-input:focus {
 		outline: none;
 	}
@@ -611,9 +715,14 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 		margin-top: 0.9rem;
 	}
 
+	.gb-canvas-wrap {
+		position: relative;
+		width: min(100%, 15rem);
+	}
+
 	.gb-canvas {
 		display: block;
-		width: min(100%, 15rem);
+		width: 100%;
 		aspect-ratio: 10 / 7;
 		background: linear-gradient(175deg, #fff3c4 0%, #ffe98f 100%);
 		border-radius: 2px;
@@ -631,9 +740,26 @@ const moods = ['😄', '🔥', '❤️', '👋', '😎', '🥲'];
 		margin-top: 0.45rem;
 	}
 
+	/* Where the keyboard pen currently is. Hollow with the pen up, filled
+	   when it's down and laying ink. */
+	.gb-caret {
+		position: absolute;
+		width: 11px;
+		height: 11px;
+		margin: -6px 0 0 -6px;
+		border: 2px solid #2e2820;
+		border-radius: 50%;
+		pointer-events: none;
+	}
+
+	.gb-caret[data-down='1'] {
+		background: #2e2820;
+	}
+
 	.gb-pad-hint {
 		font-size: 0.75rem;
 		color: var(--faint);
+		line-height: 1.35;
 	}
 
 	.gb-status {

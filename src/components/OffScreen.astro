@@ -1,22 +1,45 @@
 ---
-// "Off screen" — a fanned polaroid row of personal photos.
-// Images live in /public and are served from the site root. The label (from the
-// file name) shows above each photo on hover. `src` is URL-encoded for spaces.
+// "Elsewhere" — a fanned polaroid row of personal photos.
+// Images live in src/assets so Astro resizes and re-encodes them at build time;
+// the originals are multi-megabyte phone shots rendered ~150px wide.
+// The label shows above each photo on hover.
+import { Image } from 'astro:assets';
+import cloudOfFluff from '../assets/photos/cloud-of-fluff.jpg';
+import legend from '../assets/photos/legend.jpg';
+import theGoat from '../assets/photos/the-goat.jpg';
+import redDevil from '../assets/photos/red-devil.jpg';
+import cowboy from '../assets/photos/cowboy.jpg';
+import favMeme from '../assets/photos/fav-meme.jpg';
+import minimal from '../assets/photos/minimal.jpg';
+import outExploring from '../assets/photos/out-exploring.jpg';
+
 const photos = [
-	{ src: '/Screenshot_20260626_140850_Instagram.jpg', label: 'My cloud of fluff' },
-	{ src: '/mydwag!!!.jpg', label: 'My dwag!!!' },
-	{ src: '/GOAT.jpg', label: 'The GOAT' },
-	{ src: '/Reddevil.jpg', label: 'Red Devil' },
-	{ src: '/Where i live.jpg', label: 'Where I live' },
-	{ src: '/Fav meme.jpg', label: 'Fav meme' },
-	{ src: '/Screenshot_20260630_175044_Instagram.jpg', label: 'Hello from AB 😊' },
-	{ src: '/Screenshot_20260524_201442_Instagram(1).jpg', label: 'Out exploring' },
-].map((p) => ({ ...p, src: encodeURI(p.src) }));
+	{ src: cloudOfFluff, label: 'My cloud of fluff' },
+	{ src: legend, label: 'Legend' },
+	{ src: theGoat, label: 'The GOAT' },
+	{ src: redDevil, label: 'Red Devil' },
+	{ src: cowboy, label: 'Cowboy era' },
+	{ src: favMeme, label: 'Fav meme' },
+	{ src: minimal, label: 'Minimal' },
+	{ src: outExploring, label: 'Out exploring' },
+];
+
+// The card is clamp(7.5rem, 14vw, 10.5rem) wide — up to 168px — and
+// clamp(4.75rem, 21vw, 6.5rem) on phones, and hover scales it 1.14, so the
+// painted box tops out near 192px.
+//
+// `sizes` has to describe THAT box. It previously claimed 152px while the
+// cards had grown to 168px, so the browser picked a candidate too small for
+// the box and upscaled it — which is what made these look soft.
+const sizes = '(max-width: 560px) 120px, 192px';
+// 1x / 1.5x / 2x / 3x of the 192px box, so a phone at DPR 3 still gets real
+// pixels instead of a stretched 2x file.
+const widths = [192, 288, 384, 576];
 ---
 
 <section class="offscreen">
 	<div class="wrap">
-		<h2 class="heading" data-anim="fade">Off screen</h2>
+		<h2 class="heading" data-anim="fade">Elsewhere</h2>
 	</div>
 
 	<div class="stage">
@@ -38,50 +61,29 @@ const photos = [
 				photos.map((photo) => (
 					<figure class="polaroid" data-polaroid>
 						<figcaption class="tip">{photo.label}</figcaption>
-						<img src={photo.src} alt={photo.label} loading="lazy" />
+						<div class="photo-frame">
+						<Image
+							src={photo.src}
+							alt={photo.label}
+							width={576}
+							widths={widths}
+							sizes={sizes}
+							quality={90}
+							loading="lazy"
+							decoding="async"
+						/>
+						</div>
 					</figure>
 				))
 			}
 		</div>
 	</div>
-
-	<div class="wrap">
-	</div>
 </section>
 
-<script is:inline>
-	// Live local time in Paynesville (Liberia runs on GMT+0, Africa/Monrovia).
-	(function () {
-		var el = document.querySelector('[data-clock]');
-		if (!el) return;
-		var fmt = new Intl.DateTimeFormat('en-US', {
-			timeZone: 'Africa/Monrovia',
-			hour: 'numeric',
-			minute: '2-digit',
-			second: '2-digit',
-			hour12: true,
-		});
-		function render() {
-			var map = {};
-			fmt.formatToParts(new Date()).forEach(function (p) {
-				map[p.type] = p.value;
-			});
-			el.innerHTML =
-				map.hour +
-				'<span class="c">:</span>' +
-				map.minute +
-				'<span class="c">:</span>' +
-				map.second +
-				(map.dayPeriod || '').toLowerCase();
-		}
-		render();
-		setInterval(render, 1000);
-	})();
-</script>
 
 <style>
 	.offscreen {
-		margin-top: clamp(3.5rem, 9vh, 6rem);
+		margin-top: clamp(4rem, 11vh, 7rem);
 		margin-bottom: clamp(3.5rem, 9vh, 6rem);
 	}
 
@@ -90,11 +92,14 @@ const photos = [
 		margin: 0 auto;
 	}
 
+	/* Same divider + weight as Work and Guestbook, so every section opens the
+	   same way. */
 	.heading {
-		margin: 0 0 2.5rem;
-		font-size: 0.9375rem;
-		font-weight: 400;
-		color: var(--muted);
+		margin: 0 0 1.35rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: -0.015em;
+		color: var(--text);
 	}
 
 	.stage {
@@ -133,37 +138,85 @@ const photos = [
 		stroke: none;
 	}
 
+	/* Never wrap. The fan animation spreads the photos across one arc by index,
+	   so a second row would come out as a pile of randomly rotated cards. The
+	   negative margins keep all eight inside the gutters down to ~360px. */
 	.fan {
 		display: flex;
 		justify-content: center;
 		align-items: flex-start;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: 0;
 		perspective: 1200px;
 	}
 
+	/* GSAP upgrades the flat row into a 40° fan by adding .circled and
+	   pivoting each card around a point well below it. Everything stays in
+	   normal flow until then, so a no-JS visitor still gets the row. */
+	.fan.circled {
+		position: relative;
+		display: block;
+		height: var(--fan-h, 26rem);
+	}
+
+	.fan.circled .polaroid {
+		position: absolute;
+		left: 50%;
+		top: 0;
+		margin: 0;
+		/* GSAP owns the outer transform only for the fan layout. */
+		transition: opacity 0.3s ease;
+	}
+
+	/* Not a polaroid any more: a dark-bezelled card, the way the reference
+	   frames them. The white border and the deep bottom lip were throwing the
+	   brightest thing on the page behind the photos themselves. */
 	.polaroid {
 		position: relative;
-		margin: 0 -1.75rem;
-		background: var(--polaroid-bg);
-		padding: 0.45rem 0.45rem 1rem;
-		border-radius: 3px;
-		box-shadow: 0 16px 34px -16px var(--polaroid-shadow);
-		width: clamp(7rem, 13vw, 9.5rem);
-		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+		margin: 0 -1.6rem;
+		width: clamp(7.5rem, 14vw, 10.5rem);
+		transition: opacity 0.3s ease;
 		cursor: pointer;
 	}
 
+	/* Keep the hover target stationary; scale the frame around its own centre. */
+	.photo-frame {
+		pointer-events: none;
+		transform-origin: center;
+		background: var(--card);
+		padding: 0.3rem;
+		border: 1px solid var(--card-line);
+		border-radius: 14px;
+		box-shadow: 0 22px 44px -20px var(--polaroid-shadow);
+	}
+
+	/* height: auto is load-bearing. Astro's <Image> emits width/height
+	   attributes, and that height is a presentational hint — so without this
+	   the element height is never `auto` and `aspect-ratio` is ignored, which
+	   renders every photo at its raw phone-screenshot proportions. */
 	.polaroid img {
+		display: block;
 		width: 100%;
+		height: auto;
 		aspect-ratio: 3 / 4;
 		object-fit: cover;
-		border-radius: 1px;
+		border-radius: 11px;
+		/* Grey by default so the row reads as one object; the photo you're
+		   actually looking at comes back to life. */
+		filter: grayscale(1) contrast(1.04);
+		transition: filter 0.5s ease;
+	}
+
+	.polaroid:hover img {
+		filter: grayscale(0) contrast(1);
 	}
 
 	/* Hovered photo straightens, lifts and grows to the front. */
-	.polaroid:hover {
+	.fan:not(.circled) .polaroid:hover .photo-frame {
 		transform: translateY(-22px) rotate(0deg) scale(1.18) !important;
+	}
+
+	.polaroid:hover {
 		z-index: 5;
 	}
 
@@ -194,32 +247,6 @@ const photos = [
 		pointer-events: none;
 	}
 
-	.caption {
-		margin: 3rem 0 0;
-		color: var(--muted);
-		font-size: 0.9375rem;
-	}
-
-	.caption .time {
-		color: var(--text);
-		font-variant-numeric: tabular-nums;
-	}
-
-	/* Blinking colons give the ticking clock a little pulse. */
-	.caption .time :global(.c) {
-		animation: clock-blink 1s ease-in-out infinite;
-	}
-
-	@keyframes clock-blink {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.25;
-		}
-	}
-
 	/* No-JS / reduced-motion fallback: reveal the label on hover via CSS. */
 	html:not(.js) .polaroid:hover .tip,
 	html.reduce-motion .polaroid:hover .tip {
@@ -231,31 +258,30 @@ const photos = [
 			margin-bottom: 1.75rem;
 		}
 
-		/* Keep all photos on a single arc — never let the fan wrap into
-		   two broken rows. Tighter width + deeper overlap so 8 fit a phone. */
-		.fan {
-			flex-wrap: nowrap;
+		/* Tighter width + deeper overlap so all 8 fit a phone. */
+		.polaroid {
+			width: clamp(4.75rem, 21vw, 6.5rem);
+			margin: 0 -1.5rem;
 		}
 
-		.polaroid {
-			width: clamp(4.5rem, 20vw, 6rem);
-			margin: 0 -1.55rem;
-			padding: 0.35rem 0.35rem 0.8rem;
+		.photo-frame {
+			padding: 0.22rem;
+			border-radius: 11px;
+		}
+
+		.polaroid img {
+			border-radius: 9px;
 		}
 
 		/* Hover isn't a thing on touch — soften the zoom so a tapped photo
 		   doesn't blow past the screen edge. */
-		.polaroid:hover {
+		.fan:not(.circled) .polaroid:hover .photo-frame {
 			transform: translateY(-14px) rotate(0deg) scale(1.1) !important;
 		}
 
 		.tip {
 			font-size: 0.75rem;
 			padding: 0.3rem 0.6rem;
-		}
-
-		.caption {
-			margin-top: 2.25rem;
 		}
 	}
 
