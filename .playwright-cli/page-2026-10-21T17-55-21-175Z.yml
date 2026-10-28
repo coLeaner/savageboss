@@ -1,0 +1,539 @@
+- generic [active] [ref=f12e1]:
+  - button "Toggle color theme" [ref=f12e2] [cursor=pointer]
+  - main [ref=f12e5]:
+    - generic [ref=f12e6]:
+      - generic [ref=f12e7]:
+        - generic [ref=f12e8]:
+          - img "Abraham A. Sheriff" [ref=f12e9]
+          - generic [ref=f12e10]:
+            - heading [level=1] [ref=f12e11]:
+              - text: Abraham A. Sheriff
+              - img "Verified" [ref=f12e12]
+            - paragraph [ref=f12e15]: Web Developer — Paynesville, Liberia
+        - generic [ref=f12e16]:
+          - paragraph [ref=f12e17]:
+            - generic [aria-hidden] [ref=f12e19]: I'm a web developer building simple, user-friendly digital experiences, because a tool
+            - generic [aria-hidden] [ref=f12e21]: people can actually use is worth more than one that only demos well.
+          - paragraph [ref=f12e22]:
+            - generic [aria-hidden] [ref=f12e24]:
+              - text: Right now I'm building
+              - link [ref=f12e25] [cursor=pointer]:
+                - /url: https://mansa-stock.vercel.app
+                - text: MansaStock
+              - text: ", an AI business management app that lets a"
+            - generic [aria-hidden] [ref=f12e27]: company run its operations from one place. I also handle the data and inventory work
+            - generic [aria-hidden] [ref=f12e29]: at MAS Pharmacy.
+          - paragraph [ref=f12e30]:
+            - generic [aria-hidden] [ref=f12e32]: Beyond tech, I serve as Charter President of the Rotaract Club of Congo Town, where
+            - generic [aria-hidden] [ref=f12e34]:
+              - text: I'm involved in community service. I also volunteer at
+              - link [ref=f12e35] [cursor=pointer]:
+                - /url: https://liberia.empowermentsquared.org/
+                - text: Empowerment Squared Liberia
+              - text: .
+          - paragraph [ref=f12e36]:
+            - generic [aria-hidden] [ref=f12e38]: I'm finishing a BSc in Information Technology at BlueCrest University College. You can
+            - generic [aria-hidden] [ref=f12e40]:
+              - text: reach me by
+              - link [ref=f12e41] [cursor=pointer]:
+                - /url: mailto:abrahamasheriff6@gmail.com
+                - text: email
+              - text: ", or see my code on"
+              - link [ref=f12e42] [cursor=pointer]:
+                - /url: https://github.com/coLeaner
+                - text: GitHub
+              - text: .
+      - generic [ref=f12e43]:
+        - heading "Contributions" [level=2] [ref=f12e44]
+        - generic [ref=f12e45]:
+          - generic [ref=f12e47]:
+            - generic "No contributions on October 19th." [ref=f12e48]
+            - generic "No contributions on October 20th." [ref=f12e49]
+            - generic "1 contribution on October 21st." [ref=f12e50]
+            - generic "No contributions on October 22nd." [ref=f12e51]
+            - generic "No contributions on October 23rd." [ref=f12e52]
+            - generic "No contributions on October 24th." [ref=f12e53]
+            - generic "1 contribution on October 25th." [ref=f12e54]
+            - generic "No contributions on October 26th." [ref=f12e55]
+            - generic "No contributions on October 27th." [ref=f12e56]
+            - generic "No contributions on October 28th." [ref=f12e57]
+            - generic "No contributions on October 29th." [ref=f12e58]
+            - generic "No contributions on October 30th." [ref=f12e59]
+            - generic "2 contributions on October 31st." [ref=f12e60]
+            - generic "No contributions on November 1st." [ref=f12e61]
+            - generic "No contributions on November 2nd." [ref=f12e62]
+            - generic "No contributions on November 3rd." [ref=f12e63]
+            - generic "No contributions on November 4th." [ref=f12e64]
+            - generic "2 contributions on November 5th." [ref=f12e65]
+            - generic "1 contribution on November 6th." [ref=f12e66]
+            - generic "No contributions on November 7th." [ref=f12e67]
+            - generic "3 contributions on November 8th." [ref=f12e68]
+            - generic "No contributions on November 9th." [ref=f12e69]
+            - generic "No contributions on November 10th." [ref=f12e70]
+            - generic "No contributions on November 11th." [ref=f12e71]
+            - generic "1 contribution on November 12th." [ref=f12e72]
+            - generic "No contributions on November 13th." [ref=f12e73]
+            - generic "No contributions on November 14th." [ref=f12e74]
+            - generic "No contributions on November 15th." [ref=f12e75]
+            - generic "No contributions on November 16th." [ref=f12e76]
+            - generic "No contributions on November 17th." [ref=f12e77]
+            - generic "2 contributions on November 18th." [ref=f12e78]
+            - generic "No contributions on November 19th." [ref=f12e79]
+            - generic "1 contribution on November 20th." [ref=f12e80]
+            - generic "No contributions on November 21st." [ref=f12e81]
+            - generic "No contributions on November 22nd." [ref=f12e82]
+            - generic "No contributions on November 23rd." [ref=f12e83]
+            - generic "1 contribution on November 24th." [ref=f12e84]
+            - generic "No contributions on November 25th." [ref=f12e85]
+            - generic "No contributions on November 26th." [ref=f12e86]
+            - generic "No contributions on November 27th." [ref=f12e87]
+            - generic "No contributions on November 28th." [ref=f12e88]
+            - generic "No contributions on November 29th." [ref=f12e89]
+            - generic "No contributions on November 30th." [ref=f12e90]
+            - generic "No contributions on December 1st." [ref=f12e91]
+            - generic "No contributions on December 2nd." [ref=f12e92]
+            - generic "No contributions on December 3rd." [ref=f12e93]
+            - generic "No contributions on December 4th." [ref=f12e94]
+            - generic "No contributions on December 5th." [ref=f12e95]
+            - generic "No contributions on December 6th." [ref=f12e96]
+            - generic "No contributions on December 7th." [ref=f12e97]
+            - generic "No contributions on December 8th." [ref=f12e98]
+            - generic "No contributions on December 9th." [ref=f12e99]
+            - generic "No contributions on December 10th." [ref=f12e100]
+            - generic "No contributions on December 11th." [ref=f12e101]
+            - generic "No contributions on December 12th." [ref=f12e102]
+            - generic "No contributions on December 13th." [ref=f12e103]
+            - generic "No contributions on December 14th." [ref=f12e104]
+            - generic "No contributions on December 15th." [ref=f12e105]
+            - generic "No contributions on December 16th." [ref=f12e106]
+            - generic "1 contribution on December 17th." [ref=f12e107]
+            - generic "No contributions on December 18th." [ref=f12e108]
+            - generic "No contributions on December 19th." [ref=f12e109]
+            - generic "No contributions on December 20th." [ref=f12e110]
+            - generic "No contributions on December 21st." [ref=f12e111]
+            - generic "No contributions on December 22nd." [ref=f12e112]
+            - generic "1 contribution on December 23rd." [ref=f12e113]
+            - generic "No contributions on December 24th." [ref=f12e114]
+            - generic "No contributions on December 25th." [ref=f12e115]
+            - generic "1 contribution on December 26th." [ref=f12e116]
+            - generic "1 contribution on December 27th." [ref=f12e117]
+            - generic "No contributions on December 28th." [ref=f12e118]
+            - generic "No contributions on December 29th." [ref=f12e119]
+            - generic "No contributions on December 30th." [ref=f12e120]
+            - generic "No contributions on December 31st." [ref=f12e121]
+            - generic "3 contributions on January 1st." [ref=f12e122]
+            - generic "2 contributions on January 2nd." [ref=f12e123]
+            - generic "1 contribution on January 3rd." [ref=f12e124]
+            - generic "1 contribution on January 4th." [ref=f12e125]
+            - generic "2 contributions on January 5th." [ref=f12e126]
+            - generic "No contributions on January 6th." [ref=f12e127]
+            - generic "1 contribution on January 7th." [ref=f12e128]
+            - generic "No contributions on January 8th." [ref=f12e129]
+            - generic "4 contributions on January 9th." [ref=f12e130]
+            - generic "1 contribution on January 10th." [ref=f12e131]
+            - generic "8 contributions on January 11th." [ref=f12e132]
+            - generic "No contributions on January 12th." [ref=f12e133]
+            - generic "No contributions on January 13th." [ref=f12e134]
+            - generic "No contributions on January 14th." [ref=f12e135]
+            - generic "No contributions on January 15th." [ref=f12e136]
+            - generic "No contributions on January 16th." [ref=f12e137]
+            - generic "1 contribution on January 17th." [ref=f12e138]
+            - generic "No contributions on January 18th." [ref=f12e139]
+            - generic "No contributions on January 19th." [ref=f12e140]
+            - generic "No contributions on January 20th." [ref=f12e141]
+            - generic "No contributions on January 21st." [ref=f12e142]
+            - generic "No contributions on January 22nd." [ref=f12e143]
+            - generic "No contributions on January 23rd." [ref=f12e144]
+            - generic "No contributions on January 24th." [ref=f12e145]
+            - generic "No contributions on January 25th." [ref=f12e146]
+            - generic "No contributions on January 26th." [ref=f12e147]
+            - generic "No contributions on January 27th." [ref=f12e148]
+            - generic "No contributions on January 28th." [ref=f12e149]
+            - generic "No contributions on January 29th." [ref=f12e150]
+            - generic "No contributions on January 30th." [ref=f12e151]
+            - generic "No contributions on January 31st." [ref=f12e152]
+            - generic "No contributions on February 1st." [ref=f12e153]
+            - generic "1 contribution on February 2nd." [ref=f12e154]
+            - generic "No contributions on February 3rd." [ref=f12e155]
+            - generic "No contributions on February 4th." [ref=f12e156]
+            - generic "No contributions on February 5th." [ref=f12e157]
+            - generic "No contributions on February 6th." [ref=f12e158]
+            - generic "No contributions on February 7th." [ref=f12e159]
+            - generic "1 contribution on February 8th." [ref=f12e160]
+            - generic "1 contribution on February 9th." [ref=f12e161]
+            - generic "1 contribution on February 10th." [ref=f12e162]
+            - generic "4 contributions on February 11th." [ref=f12e163]
+            - generic "2 contributions on February 12th." [ref=f12e164]
+            - generic "No contributions on February 13th." [ref=f12e165]
+            - generic "No contributions on February 14th." [ref=f12e166]
+            - generic "2 contributions on February 15th." [ref=f12e167]
+            - generic "1 contribution on February 16th." [ref=f12e168]
+            - generic "1 contribution on February 17th." [ref=f12e169]
+            - generic "No contributions on February 18th." [ref=f12e170]
+            - generic "2 contributions on February 19th." [ref=f12e171]
+            - generic "No contributions on February 20th." [ref=f12e172]
+            - generic "No contributions on February 21st." [ref=f12e173]
+            - generic "No contributions on February 22nd." [ref=f12e174]
+            - generic "2 contributions on February 23rd." [ref=f12e175]
+            - generic "No contributions on February 24th." [ref=f12e176]
+            - generic "No contributions on February 25th." [ref=f12e177]
+            - generic "No contributions on February 26th." [ref=f12e178]
+            - generic "1 contribution on February 27th." [ref=f12e179]
+            - generic "No contributions on February 28th." [ref=f12e180]
+            - generic "No contributions on March 1st." [ref=f12e181]
+            - generic "No contributions on March 2nd." [ref=f12e182]
+            - generic "No contributions on March 3rd." [ref=f12e183]
+            - generic "No contributions on March 4th." [ref=f12e184]
+            - generic "12 contributions on March 5th." [ref=f12e185]
+            - generic "No contributions on March 6th." [ref=f12e186]
+            - generic "No contributions on March 7th." [ref=f12e187]
+            - generic "No contributions on March 8th." [ref=f12e188]
+            - generic "2 contributions on March 9th." [ref=f12e189]
+            - generic "No contributions on March 10th." [ref=f12e190]
+            - generic "No contributions on March 11th." [ref=f12e191]
+            - generic "No contributions on March 12th." [ref=f12e192]
+            - generic "No contributions on March 13th." [ref=f12e193]
+            - generic "4 contributions on March 14th." [ref=f12e194]
+            - generic "No contributions on March 15th." [ref=f12e195]
+            - generic "1 contribution on March 16th." [ref=f12e196]
+            - generic "No contributions on March 17th." [ref=f12e197]
+            - generic "No contributions on March 18th." [ref=f12e198]
+            - generic "No contributions on March 19th." [ref=f12e199]
+            - generic "No contributions on March 20th." [ref=f12e200]
+            - generic "No contributions on March 21st." [ref=f12e201]
+            - generic "No contributions on March 22nd." [ref=f12e202]
+            - generic "No contributions on March 23rd." [ref=f12e203]
+            - generic "No contributions on March 24th." [ref=f12e204]
+            - generic "No contributions on March 25th." [ref=f12e205]
+            - generic "No contributions on March 26th." [ref=f12e206]
+            - generic "1 contribution on March 27th." [ref=f12e207]
+            - generic "1 contribution on March 28th." [ref=f12e208]
+            - generic "1 contribution on March 29th." [ref=f12e209]
+            - generic "4 contributions on March 30th." [ref=f12e210]
+            - generic "No contributions on March 31st." [ref=f12e211]
+            - generic "1 contribution on April 1st." [ref=f12e212]
+            - generic "No contributions on April 2nd." [ref=f12e213]
+            - generic "4 contributions on April 3rd." [ref=f12e214]
+            - generic "No contributions on April 4th." [ref=f12e215]
+            - generic "No contributions on April 5th." [ref=f12e216]
+            - generic "5 contributions on April 6th." [ref=f12e217]
+            - generic "No contributions on April 7th." [ref=f12e218]
+            - generic "No contributions on April 8th." [ref=f12e219]
+            - generic "No contributions on April 9th." [ref=f12e220]
+            - generic "No contributions on April 10th." [ref=f12e221]
+            - generic "3 contributions on April 11th." [ref=f12e222]
+            - generic "No contributions on April 12th." [ref=f12e223]
+            - generic "No contributions on April 13th." [ref=f12e224]
+            - generic "No contributions on April 14th." [ref=f12e225]
+            - generic "No contributions on April 15th." [ref=f12e226]
+            - generic "No contributions on April 16th." [ref=f12e227]
+            - generic "1 contribution on April 17th." [ref=f12e228]
+            - generic "No contributions on April 18th." [ref=f12e229]
+            - generic "No contributions on April 19th." [ref=f12e230]
+            - generic "No contributions on April 20th." [ref=f12e231]
+            - generic "No contributions on April 21st." [ref=f12e232]
+            - generic "No contributions on April 22nd." [ref=f12e233]
+            - generic "No contributions on April 23rd." [ref=f12e234]
+            - generic "No contributions on April 24th." [ref=f12e235]
+            - generic "2 contributions on April 25th." [ref=f12e236]
+            - generic "No contributions on April 26th." [ref=f12e237]
+            - generic "No contributions on April 27th." [ref=f12e238]
+            - generic "1 contribution on April 28th." [ref=f12e239]
+            - generic "7 contributions on April 29th." [ref=f12e240]
+            - generic "2 contributions on April 30th." [ref=f12e241]
+            - generic "3 contributions on May 1st." [ref=f12e242]
+            - generic "1 contribution on May 2nd." [ref=f12e243]
+            - generic "1 contribution on May 3rd." [ref=f12e244]
+            - generic "No contributions on May 4th." [ref=f12e245]
+            - generic "No contributions on May 5th." [ref=f12e246]
+            - generic "16 contributions on May 6th." [ref=f12e247]
+            - generic "No contributions on May 7th." [ref=f12e248]
+            - generic "No contributions on May 8th." [ref=f12e249]
+            - generic "No contributions on May 9th." [ref=f12e250]
+            - generic "No contributions on May 10th." [ref=f12e251]
+            - generic "No contributions on May 11th." [ref=f12e252]
+            - generic "2 contributions on May 12th." [ref=f12e253]
+            - generic "2 contributions on May 13th." [ref=f12e254]
+            - generic "1 contribution on May 14th." [ref=f12e255]
+            - generic "2 contributions on May 15th." [ref=f12e256]
+            - generic "No contributions on May 16th." [ref=f12e257]
+            - generic "No contributions on May 17th." [ref=f12e258]
+            - generic "1 contribution on May 18th." [ref=f12e259]
+            - generic "3 contributions on May 19th." [ref=f12e260]
+            - generic "10 contributions on May 20th." [ref=f12e261]
+            - generic "No contributions on May 21st." [ref=f12e262]
+            - generic "1 contribution on May 22nd." [ref=f12e263]
+            - generic "No contributions on May 23rd." [ref=f12e264]
+            - generic "No contributions on May 24th." [ref=f12e265]
+            - generic "No contributions on May 25th." [ref=f12e266]
+            - generic "No contributions on May 26th." [ref=f12e267]
+            - generic "No contributions on May 27th." [ref=f12e268]
+            - generic "No contributions on May 28th." [ref=f12e269]
+            - generic "3 contributions on May 29th." [ref=f12e270]
+            - generic "1 contribution on May 30th." [ref=f12e271]
+            - generic "No contributions on May 31st." [ref=f12e272]
+            - generic "2 contributions on June 1st." [ref=f12e273]
+            - generic "No contributions on June 2nd." [ref=f12e274]
+            - generic "3 contributions on June 3rd." [ref=f12e275]
+            - generic "No contributions on June 4th." [ref=f12e276]
+            - generic "2 contributions on June 5th." [ref=f12e277]
+            - generic "No contributions on June 6th." [ref=f12e278]
+            - generic "1 contribution on June 7th." [ref=f12e279]
+            - generic "7 contributions on June 8th." [ref=f12e280]
+            - generic "No contributions on June 9th." [ref=f12e281]
+            - generic "No contributions on June 10th." [ref=f12e282]
+            - generic "1 contribution on June 11th." [ref=f12e283]
+            - generic "No contributions on June 12th." [ref=f12e284]
+            - generic "No contributions on June 13th." [ref=f12e285]
+            - generic "No contributions on June 14th." [ref=f12e286]
+            - generic "No contributions on June 15th." [ref=f12e287]
+            - generic "No contributions on June 16th." [ref=f12e288]
+            - generic "No contributions on June 17th." [ref=f12e289]
+            - generic "1 contribution on June 18th." [ref=f12e290]
+            - generic "2 contributions on June 19th." [ref=f12e291]
+            - generic "No contributions on June 20th." [ref=f12e292]
+            - generic "1 contribution on June 21st." [ref=f12e293]
+            - generic "No contributions on June 22nd." [ref=f12e294]
+            - generic "No contributions on June 23rd." [ref=f12e295]
+            - generic "No contributions on June 24th." [ref=f12e296]
+            - generic "No contributions on June 25th." [ref=f12e297]
+            - generic "No contributions on June 26th." [ref=f12e298]
+            - generic "No contributions on June 27th." [ref=f12e299]
+            - generic "No contributions on June 28th." [ref=f12e300]
+            - generic "2 contributions on June 29th." [ref=f12e301]
+            - generic "1 contribution on June 30th." [ref=f12e302]
+            - generic "3 contributions on July 1st." [ref=f12e303]
+            - generic "1 contribution on July 2nd." [ref=f12e304]
+            - generic "3 contributions on July 3rd." [ref=f12e305]
+            - generic "6 contributions on July 4th." [ref=f12e306]
+            - generic "7 contributions on July 5th." [ref=f12e307]
+            - generic "7 contributions on July 6th." [ref=f12e308]
+            - generic "16 contributions on July 7th." [ref=f12e309]
+            - generic "12 contributions on July 8th." [ref=f12e310]
+            - generic "6 contributions on July 9th." [ref=f12e311]
+            - generic "10 contributions on July 10th." [ref=f12e312]
+            - generic "3 contributions on July 11th." [ref=f12e313]
+            - generic "5 contributions on July 12th." [ref=f12e314]
+            - generic "No contributions on July 13th." [ref=f12e315]
+            - generic "No contributions on July 14th." [ref=f12e316]
+            - generic "No contributions on July 15th." [ref=f12e317]
+            - generic "2 contributions on July 16th." [ref=f12e318]
+            - generic "No contributions on July 17th." [ref=f12e319]
+            - generic "No contributions on July 18th." [ref=f12e320]
+            - generic "No contributions on July 19th." [ref=f12e321]
+            - generic "12 contributions on July 20th." [ref=f12e322]
+            - generic "11 contributions on July 21st." [ref=f12e323]
+            - generic "No contributions on July 22nd." [ref=f12e324]
+            - generic "6 contributions on July 23rd." [ref=f12e325]
+            - generic "4 contributions on July 24th." [ref=f12e326]
+            - generic "3 contributions on July 25th." [ref=f12e327]
+            - generic "3 contributions on July 26th." [ref=f12e328]
+            - generic "3 contributions on July 27th." [ref=f12e329]
+            - generic "5 contributions on July 28th." [ref=f12e330]
+            - generic "No contributions on July 29th." [ref=f12e331]
+            - generic "2 contributions on July 30th." [ref=f12e332]
+            - generic "No contributions on July 31st." [ref=f12e333]
+            - generic "No contributions on August 1st." [ref=f12e334]
+            - generic "No contributions on August 2nd." [ref=f12e335]
+            - generic "8 contributions on August 3rd." [ref=f12e336]
+            - generic "3 contributions on August 4th." [ref=f12e337]
+            - generic "No contributions on August 5th." [ref=f12e338]
+            - generic "No contributions on August 6th." [ref=f12e339]
+            - generic "No contributions on August 7th." [ref=f12e340]
+            - generic "No contributions on August 8th." [ref=f12e341]
+            - generic "No contributions on August 9th." [ref=f12e342]
+            - generic "1 contribution on August 10th." [ref=f12e343]
+            - generic "No contributions on August 11th." [ref=f12e344]
+            - generic "No contributions on August 12th." [ref=f12e345]
+            - generic "2 contributions on August 13th." [ref=f12e346]
+            - generic "1 contribution on August 14th." [ref=f12e347]
+            - generic "No contributions on August 15th." [ref=f12e348]
+            - generic "No contributions on August 16th." [ref=f12e349]
+            - generic "2 contributions on August 17th." [ref=f12e350]
+            - generic "6 contributions on August 18th." [ref=f12e351]
+            - generic "19 contributions on August 19th." [ref=f12e352]
+            - generic "14 contributions on August 20th." [ref=f12e353]
+            - generic "8 contributions on August 21st." [ref=f12e354]
+            - generic "No contributions on August 22nd." [ref=f12e355]
+            - generic "No contributions on August 23rd." [ref=f12e356]
+            - generic "4 contributions on August 24th." [ref=f12e357]
+            - generic "10 contributions on August 25th." [ref=f12e358]
+            - generic "6 contributions on August 26th." [ref=f12e359]
+            - generic "6 contributions on August 27th." [ref=f12e360]
+            - generic "4 contributions on August 28th." [ref=f12e361]
+            - generic "2 contributions on August 29th." [ref=f12e362]
+            - generic "10 contributions on August 30th." [ref=f12e363]
+            - generic "3 contributions on August 31st." [ref=f12e364]
+            - generic "4 contributions on September 1st." [ref=f12e365]
+            - generic "2 contributions on September 2nd." [ref=f12e366]
+            - generic "13 contributions on September 3rd." [ref=f12e367]
+            - generic "No contributions on September 4th." [ref=f12e368]
+            - generic "3 contributions on September 5th." [ref=f12e369]
+            - generic "3 contributions on September 6th." [ref=f12e370]
+            - generic "3 contributions on September 7th." [ref=f12e371]
+            - generic "10 contributions on September 8th." [ref=f12e372]
+            - generic "12 contributions on September 9th." [ref=f12e373]
+            - generic "6 contributions on September 10th." [ref=f12e374]
+            - generic "10 contributions on September 11th." [ref=f12e375]
+            - generic "2 contributions on September 12th." [ref=f12e376]
+            - generic "No contributions on September 13th." [ref=f12e377]
+            - generic "8 contributions on September 14th." [ref=f12e378]
+            - generic "7 contributions on September 15th." [ref=f12e379]
+            - generic "7 contributions on September 16th." [ref=f12e380]
+            - generic "1 contribution on September 17th." [ref=f12e381]
+            - generic "No contributions on September 18th." [ref=f12e382]
+            - generic "1 contribution on September 19th." [ref=f12e383]
+            - generic "No contributions on September 20th." [ref=f12e384]
+            - generic "No contributions on September 21st." [ref=f12e385]
+            - generic "No contributions on September 22nd." [ref=f12e386]
+            - generic "16 contributions on September 23rd." [ref=f12e387]
+            - generic "2 contributions on September 24th." [ref=f12e388]
+            - generic "No contributions on September 25th." [ref=f12e389]
+            - generic "2 contributions on September 26th." [ref=f12e390]
+            - generic "6 contributions on September 27th." [ref=f12e391]
+            - generic "3 contributions on September 28th." [ref=f12e392]
+            - generic "1 contribution on September 29th." [ref=f12e393]
+            - generic "3 contributions on September 30th." [ref=f12e394]
+            - generic "17 contributions on October 1st." [ref=f12e395]
+            - generic "2 contributions on October 2nd." [ref=f12e396]
+            - generic "7 contributions on October 3rd." [ref=f12e397]
+            - generic "14 contributions on October 4th." [ref=f12e398]
+            - generic "11 contributions on October 5th." [ref=f12e399]
+            - generic "21 contributions on October 6th." [ref=f12e400]
+            - generic "9 contributions on October 7th." [ref=f12e401]
+            - generic "21 contributions on October 8th." [ref=f12e402]
+            - generic "6 contributions on October 9th." [ref=f12e403]
+            - generic "18 contributions on October 10th." [ref=f12e404]
+            - generic "20 contributions on October 11th." [ref=f12e405]
+            - generic "15 contributions on October 12th." [ref=f12e406]
+            - generic "17 contributions on October 13th." [ref=f12e407]
+            - generic "30 contributions on October 14th." [ref=f12e408]
+            - generic "28 contributions on October 15th." [ref=f12e409]
+            - generic "21 contributions on October 16th." [ref=f12e410]
+            - generic "15 contributions on October 17th." [ref=f12e411]
+            - generic "12 contributions on October 18th." [ref=f12e412]
+            - generic "13 contributions on October 19th." [ref=f12e413]
+            - generic "No contributions on October 20th." [ref=f12e414]
+            - generic "No contributions on October 21st." [ref=f12e415]
+          - generic [ref=f12e419]:
+            - paragraph [ref=f12e420]: 845 contributions in the last year
+            - paragraph [ref=f12e421]:
+              - generic [ref=f12e422]: Less
+              - generic [ref=f12e428]: More
+      - generic [ref=f12e429]:
+        - heading "Work" [level=2] [ref=f12e430]
+        - generic [ref=f12e431]:
+          - generic [ref=f12e432]:
+            - generic [ref=f12e434]:
+              - generic [ref=f12e435]:
+                - link "MansaStock" [ref=f12e436] [cursor=pointer]:
+                  - /url: https://mansa-stock.vercel.app
+                - generic [ref=f12e437]: Building
+              - generic [ref=f12e438]: AI business management app
+            - generic [ref=f12e439]: 2025 — Now
+          - generic [ref=f12e440]:
+            - generic [ref=f12e442]:
+              - generic [ref=f12e443]:
+                - link "BossForm" [ref=f12e444] [cursor=pointer]:
+                  - /url: https://bossform.vercel.app
+                - generic [ref=f12e445]: Building
+              - generic [ref=f12e446]: Forms, responses and automations
+            - generic [ref=f12e447]: 2025 — Now
+          - generic [ref=f12e448]:
+            - generic [ref=f12e450]:
+              - generic [ref=f12e451]:
+                - link "Connectz" [ref=f12e452] [cursor=pointer]:
+                  - /url: https://libconnectz.com
+                - generic [ref=f12e453]: Building
+              - generic [ref=f12e454]: Digital contact cards
+            - generic [ref=f12e455]: 2025 — Now
+          - generic [ref=f12e456]:
+            - generic [ref=f12e458]:
+              - generic [ref=f12e459]:
+                - text: Habit
+                - generic [ref=f12e460]: Building
+              - generic [ref=f12e461]: Daily habit tracker for Android
+            - generic [ref=f12e462]: 2025 — Now
+          - generic [ref=f12e463]:
+            - generic [ref=f12e466]:
+              - generic [ref=f12e467]:
+                - text: Data & inventory, MAS Pharmacy
+                - generic [ref=f12e468]: Data Analytics
+              - generic [ref=f12e469]: Operations
+            - generic [ref=f12e470]: 2025 — Now
+          - generic [ref=f12e471]:
+            - generic [ref=f12e473]:
+              - generic [ref=f12e474]: Charter President
+              - generic [ref=f12e475]: Rotaract Club of Congo Town · Community service
+            - generic [ref=f12e476]: Present
+          - generic [ref=f12e477]:
+            - generic [ref=f12e479]:
+              - link "Volunteer" [ref=f12e481] [cursor=pointer]:
+                - /url: https://liberia.empowermentsquared.org/
+              - generic [ref=f12e482]: Empowerment Squared Liberia
+            - generic [ref=f12e483]: Present
+          - generic [ref=f12e484]:
+            - generic [ref=f12e489]:
+              - generic [ref=f12e490]: BSc Information Technology
+              - generic [ref=f12e491]: BlueCrest University College
+            - generic [ref=f12e492]: 2022 — 26
+      - generic [ref=f12e493]:
+        - heading "Toolkit" [level=2] [ref=f12e494]
+        - generic [ref=f12e495]:
+          - heading "Tech" [level=3] [ref=f12e496]
+          - list [ref=f12e497]:
+            - listitem [ref=f12e498]:
+              - generic [ref=f12e499]: UX/UI
+            - listitem [ref=f12e500]:
+              - generic [ref=f12e501]: HTML
+            - listitem [ref=f12e502]:
+              - generic [ref=f12e503]: CSS
+            - listitem [ref=f12e504]:
+              - generic [ref=f12e505]: JavaScript
+            - listitem [ref=f12e506]:
+              - generic [ref=f12e507]: React
+            - listitem [ref=f12e508]:
+              - generic [ref=f12e509]: Next.js
+        - generic [ref=f12e510]:
+          - heading "Strengths" [level=3] [ref=f12e511]
+          - list [ref=f12e512]:
+            - listitem [ref=f12e513]:
+              - generic [ref=f12e514]: Problem-solving
+            - listitem [ref=f12e515]:
+              - generic [ref=f12e516]: Creativity
+            - listitem [ref=f12e517]:
+              - generic [ref=f12e518]: Communication
+            - listitem [ref=f12e519]:
+              - generic [ref=f12e520]: Time management
+    - generic [ref=f12e521]:
+      - heading "Elsewhere" [level=2] [ref=f12e523]
+      - generic [ref=f12e525]:
+        - figure "My cloud of fluff" [ref=f12e526] [cursor=pointer]:
+          - img "My cloud of fluff" [ref=f12e527]
+        - figure "Legend" [ref=f12e528] [cursor=pointer]:
+          - img "Legend" [ref=f12e529]
+        - figure "The GOAT" [ref=f12e530] [cursor=pointer]:
+          - img "The GOAT" [ref=f12e531]
+        - figure "Red Devil" [ref=f12e532] [cursor=pointer]:
+          - img "Red Devil" [ref=f12e533]
+        - figure "Cowboy era" [ref=f12e534] [cursor=pointer]:
+          - img "Cowboy era" [ref=f12e535]
+        - figure "Fav meme" [ref=f12e536] [cursor=pointer]:
+          - img "Fav meme" [ref=f12e537]
+        - figure "Minimal" [ref=f12e538] [cursor=pointer]:
+          - img "Minimal" [ref=f12e539]
+        - figure "Out exploring" [ref=f12e540] [cursor=pointer]:
+          - img "Out exploring" [ref=f12e541]
+    - img "Boss Sheriff" [ref=f12e544]:
+      - generic [ref=f12e545]: Boss
+      - generic [ref=f12e546]: Sheriff
+    - generic [ref=f12e549]:
+      - paragraph [ref=f12e550]:
+        - generic [ref=f12e551]: 5:55:20pm
+        - text: in Paynesville, Liberia
+      - link "index.astro" [ref=f12e552] [cursor=pointer]:
+        - /url: https://github.com/coLeaner/savageboss/blob/master/src/pages/index.astro
+  - generic:
+    - button "Poke Boss the dinosaur" [ref=f12e553] [cursor=pointer]
+    - button "Feed Boss" [ref=f12e570] [cursor=pointer]: 🍖
+  - button "Toggle sound effects" [ref=f12e571] [cursor=pointer]

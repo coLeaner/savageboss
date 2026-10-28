@@ -1,0 +1,244 @@
+---
+interface Props { variant: number }
+const { variant } = Astro.props;
+// Deterministic placement keeps the sky still across builds and theme changes.
+const stars = Array.from({ length: 48 }, (_, index) => ({
+	x: 32 + ((index * 73 + variant * 41) % 270),
+	y: 9 + ((index * 31 + variant * 17) % 124),
+	r: index % 11 === 0 ? 1.1 : index % 3 === 0 ? 0.65 : 0.3,
+}));
+const constellations = [
+	'M205 40 225 23 250 35 278 18 292 43',
+	'M206 28 228 47 251 30 274 46 290 25',
+	'M211 49 226 26 250 18 270 36 294 29',
+];
+---
+
+<div class="sky" style={`--sky-delay: ${variant * -5}s`} aria-hidden="true">
+	<div class="sun"><span class="sun-disc"></span></div>
+	<div class="day-cloud"></div>
+	<div class="glow"></div>
+	<div class="nebula"></div>
+	<div class="cloud cloud-back"></div>
+	<div class="cloud cloud-front"></div>
+	<svg class="stars" viewBox="0 0 320 150" preserveAspectRatio="xMidYMid slice" fill="currentColor">
+		<g class="constellation">
+			<path d={constellations[variant % 3]} fill="none" stroke="currentColor" stroke-width="0.5" />
+		</g>
+		{[0, 1, 2].map(cluster => (
+			<g class={`cluster cluster-${cluster}`}>
+				{stars.filter((_, index) => index % 3 === cluster).map(star => <circle cx={star.x} cy={star.y} r={star.r} />)}
+			</g>
+		))}
+		<path class="sparkle" d="M256 26v6m-3-3h6M184 65v4m-2-2h4" fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" />
+		<g class="beacon">
+			<circle cx={260 - variant * 17} cy={40 + variant * 8} r="6" opacity="0.06" />
+			<circle cx={260 - variant * 17} cy={40 + variant * 8} r="3" opacity="0.12" />
+			<circle cx={260 - variant * 17} cy={40 + variant * 8} r="1" opacity="0.9" />
+		</g>
+		<g class="wisps" fill="none" stroke="currentColor" stroke-linecap="round">
+			<path d="M100 145C142 118 159 139 194 111S249 85 332 99" />
+			<path d="M126 151C165 123 180 145 216 117S272 103 332 81" />
+			<path d="M165 151C206 126 225 140 261 118S303 114 333 106" />
+		</g>
+	</svg>
+	<div class="moon">
+		<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
+			<path d="M20.9 13.1A8.9 8.9 0 0 1 10.9 3a9.1 9.1 0 1 0 10 10.1Z" />
+		</svg>
+	</div>
+	<span class="shooting-star"></span>
+	<span class="shooting-star shooting-star-late"></span>
+</div>
+
+<script>
+	import { getSkyPhase } from '../lib/sky-time';
+	function syncSky() {
+		document.documentElement.dataset.skyPhase = getSkyPhase();
+	}
+	syncSky();
+	// Astro bundles this script once for all three cards. Refresh after a
+	// sleeping/background tab wakes as well as across the 6 AM / 6 PM boundary.
+	setInterval(syncSky, 30_000);
+	document.addEventListener('visibilitychange', () => {
+		if (!document.hidden) syncSky();
+	});
+</script>
+
+<style>
+	:global(html.js:not([data-sky-phase])) .sky { visibility: hidden; }
+	.sun, .day-cloud { display: none; }
+	.moon {
+		position: absolute;
+		top: -5px;
+		right: -3px;
+		width: 52px;
+		height: 52px;
+		display: grid;
+		place-items: center;
+		color: light-dark(#fff5d6, #fff3cd);
+	}
+	.moon::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		background: radial-gradient(circle, #fff1bb38, #c8d4ff18 40%, transparent 70%);
+		animation: moon-glow 7s ease-in-out infinite alternate;
+		animation-delay: var(--sky-delay);
+	}
+	.moon svg { position: relative; width: 20px; height: 20px; transform: rotate(-15deg); filter: drop-shadow(0 0 4px #d9ddff70); }
+	:global([data-sky-phase='day']) .moon { display: none; }
+	@keyframes moon-glow { from { opacity: 0.55; transform: scale(0.9); } to { opacity: 1; transform: scale(1.12); } }
+	:global([data-sky-phase='day']) .sky {
+		--sky-tint: light-dark(#7cc9ed, #397d9d);
+		--sky-glow: #ffd27580;
+		--cloud-highlight: light-dark(#fffdf2df, #e4efff80);
+		--cloud-shadow: light-dark(#b3ddf399, #7dbad56b);
+	}
+	:global([data-sky-phase='day']) .stars,
+	:global([data-sky-phase='day']) .shooting-star,
+	:global([data-sky-phase='day']) .nebula { display: none; }
+	:global([data-sky-phase='day']) .sun {
+		display: grid;
+		place-items: center;
+		position: absolute;
+		width: 100px;
+		height: 100px;
+		right: -5px;
+		top: -14px;
+		background: radial-gradient(circle, #ffda7590 10%, #ffc45a30 45%, transparent 70%);
+		animation: sunshine 8s ease-in-out infinite alternate;
+		animation-delay: var(--sky-delay);
+	}
+	.sun-disc {
+		width: 27px;
+		height: 27px;
+		border-radius: 50%;
+		background: radial-gradient(circle at 35% 30%, #fff8ce, #ffd369 65%, #ffb845);
+		box-shadow: 0 0 14px #ffd36d99, 0 0 35px #ffc65c55;
+	}
+	.sun::before {
+		content: '';
+		position: absolute;
+		inset: 14px;
+		border-radius: 50%;
+		background: repeating-conic-gradient(from 0deg, transparent 0deg 27deg, #ffd57066 28deg 30deg);
+		mask-image: radial-gradient(circle, transparent 35%, #000 45%, transparent 70%);
+		animation: sun-rays 60s linear infinite;
+	}
+	:global([data-sky-phase='day']) .day-cloud {
+		display: block;
+		position: absolute;
+		right: -10%;
+		top: 48%;
+		width: 60%;
+		height: 38%;
+		background: radial-gradient(ellipse at 50% 70%, var(--cloud-highlight) 25%, transparent 64%), radial-gradient(ellipse at 32% 65%, var(--cloud-highlight) 20%, transparent 55%);
+		filter: blur(2px);
+		animation: cloud-drift 22s ease-in-out infinite alternate;
+		animation-delay: var(--sky-delay);
+	}
+	@keyframes sunshine { from { opacity: 0.75; transform: scale(0.95); } to { opacity: 1; transform: scale(1.06); } }
+	@keyframes sun-rays { to { transform: rotate(360deg); } }
+	.sky {
+		--sky-tint: light-dark(#7779ca, #535ab6);
+		--sky-glow: light-dark(#7468c66b, #8994ff70);
+		--cloud-highlight: light-dark(#8874c87a, #a69af58a);
+		--cloud-shadow: light-dark(#778ace66, #6b86e66b);
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		pointer-events: none;
+		user-select: none;
+		border-radius: inherit;
+		background: linear-gradient(125deg, transparent 15%, color-mix(in srgb, var(--sky-tint) 32%, var(--card)) 100%);
+		mask-image: linear-gradient(to right, transparent 15%, #000 85%);
+	}
+	.glow {
+		position: absolute;
+		inset: -30% -25% -40% 15%;
+		background: radial-gradient(ellipse at 70% 30%, var(--sky-glow), transparent 68%);
+		animation: sky-glow 16s ease-in-out infinite alternate;
+		animation-delay: var(--sky-delay);
+	}
+	.nebula {
+		position: absolute;
+		inset: 10% -20% -45% 25%;
+		background:
+			radial-gradient(ellipse at 68% 52%, light-dark(#b17cac38, #bf92ed36), transparent 43%),
+			radial-gradient(ellipse at 48% 62%, light-dark(#5489b842, #64b0d536), transparent 48%),
+			radial-gradient(ellipse at 70% 80%, var(--cloud-highlight), transparent 55%);
+		transform: rotate(-24deg);
+		animation: nebula-drift 32s ease-in-out infinite alternate;
+		animation-delay: var(--sky-delay);
+	}
+	.constellation { opacity: 0.22; }
+	.beacon { animation: star-twinkle 12s ease-in-out infinite alternate; animation-delay: var(--sky-delay); }
+	.wisps { stroke-width: 6px; opacity: 0.09; filter: blur(3px); animation: cloud-drift 28s ease-in-out infinite alternate-reverse; animation-delay: var(--sky-delay); }
+	.wisps path:nth-child(2) { stroke-width: 2px; }
+	.wisps path:nth-child(3) { stroke-width: 9px; opacity: 0.6; }
+	@keyframes nebula-drift { from { transform: translate(-3%, 3%) rotate(-24deg); } to { transform: translate(6%, -5%) rotate(-17deg); } }
+	.cloud {
+		position: absolute;
+		width: 90%;
+		height: 80%;
+		right: -20%;
+		bottom: -45%;
+		border-radius: 45% 60% 0 0;
+		background: radial-gradient(ellipse at 35% 35%, var(--cloud-highlight), var(--cloud-shadow) 42%, transparent 72%);
+		filter: blur(9px);
+		animation: cloud-drift 20s ease-in-out infinite alternate;
+		animation-delay: var(--sky-delay);
+	}
+	.cloud-back { right: 0; bottom: -35%; opacity: 0.85; animation-duration: 27s; animation-direction: alternate-reverse; }
+	.cloud-front { transform: rotate(-12deg); }
+	.stars { position: absolute; inset: 0; width: 100%; height: 100%; color: light-dark(#46447e, #e0e6ff); }
+	.cluster { animation: star-twinkle 7s ease-in-out infinite alternate; animation-delay: var(--sky-delay); }
+	.cluster-1 { animation-duration: 9s; animation-direction: alternate-reverse; }
+	.cluster-2 { animation-duration: 11s; }
+	.sparkle { opacity: 0.5; animation: star-twinkle 8s ease-in-out infinite alternate-reverse; animation-delay: var(--sky-delay); }
+	.shooting-star {
+		position: absolute;
+		left: 95%;
+		top: -8px;
+		width: 58px;
+		height: 1px;
+		opacity: 0;
+		color: light-dark(#5552a6, #e0e8ff);
+		background: linear-gradient(to right, currentColor, transparent);
+		transform-origin: left center;
+		animation: shooting-star 8.5s linear infinite;
+		animation-delay: var(--sky-delay);
+	}
+	.shooting-star::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: -1px;
+		width: 3px;
+		height: 3px;
+		border-radius: 50%;
+		background: currentColor;
+		box-shadow: 0 0 5px currentColor;
+	}
+	.shooting-star-late { left: 82%; top: 9%; width: 40px; animation-duration: 11s; animation-delay: calc(var(--sky-delay) - 4s); }
+	@keyframes shooting-star {
+		0%, 2% { transform: translate(0, 0) rotate(-35deg); opacity: 0; }
+		5% { opacity: 0.85; }
+		16% { opacity: 0.55; }
+		21%, 100% { transform: translate(-210px, 147px) rotate(-35deg); opacity: 0; }
+	}
+	@keyframes star-twinkle { from { opacity: 0.35; } to { opacity: 0.9; } }
+	@keyframes cloud-drift { from { transform: translate(-5%, 3%) rotate(-8deg); } to { transform: translate(13%, -12%) rotate(6deg); } }
+	@keyframes sky-glow { from { transform: translate(0, 0); opacity: 0.55; } to { transform: translate(-8%, 6%); opacity: 1; } }
+	@media (prefers-reduced-motion: reduce) {
+		.moon::before { animation: none; }
+		:global([data-sky-phase='day']) .sun,
+		:global([data-sky-phase='day']) .day-cloud,
+		.sun::before { animation: none; }
+		.glow, .cloud, .cluster, .sparkle, .nebula, .beacon, .wisps { animation: none; }
+		.shooting-star { display: none; animation: none; }
+		.cluster { opacity: 0.65; }
+	}
+</style>

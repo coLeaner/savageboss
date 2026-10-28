@@ -1,410 +1,147 @@
 ---
-// Work — one row per thing, laid out like the reference's writings list:
-// a tile on the left, the title and what it is in the middle, the period on
-// the right. The old left-hand year column is gone; it spent the page's
-// widest gutter on a value that repeated down four rows straight.
-//
-// A row's tile is either a product's own logo or a drawn line-art icon.
-// The logos are the real app marks, lifted from each project:
-//   MansaStock  mansa-stock/public/brand/mark-{light,dark}-256.webp
-//   BossForm    Bossform/bossform/public/branding/logo-3d.webp
-//   Habit       HabitT/HabitT/assets/icons/adaptive-icon/foreground.png
-//   Connectz    connectz.com/src/components/Logo.jsx (the inline mark)
-// Habit comes from the adaptive-icon foreground rather than icon.png: that
-// one bakes in a cream #FAF9F6 square, and the foreground layer is the same
-// art on transparency. Its Android safe-zone padding is trimmed off, or the
-// chicken sits tiny in the middle of the tile.
-// `fit` is 'cover' for a square icon that brings its own background,
-// and 'contain' for a transparent mark that needs the tile's padding to
-// breathe. The Habit art is taller than it is wide, so it is padded back out
-// to a square on export — otherwise contain fits it by height and it sits
-// smaller and off-centre next to the other two.
-import { Image } from 'astro:assets';
 import { products, PLACEHOLDER } from '../data/products';
+import type { ImageMetadata } from 'astro';
 import rotaractLogo from '../assets/logos/rotaract.png';
 
-// Grouped rather than one flat list. A product, a day job, a community role
-// and a degree are different kinds of thing, and reading them as peers made
-// the section hard to scan. Grouping also retires the four stacked
-// "Building" chips: once the heading says Building, the chip on every row
-// under it is just noise (the render below drops any tag that repeats its
-// own group's name).
-const groups = [
-	{ label: 'Building', items: products },
-	{
-		label: 'Work',
-		items: [
-			{
-				title: 'Data & inventory, MAS Pharmacy',
-				note: 'Operations',
-				tag: 'Data Analytics',
-				variant: 'data',
-				icon: 'chart',
-				period: '2026',
-				fit: 'contain',
-			},
-		],
-	},
-	{
-		label: 'Community',
-		items: [
-			{
-				title: 'Charter President',
-				note: 'Rotaract Club of Congo Town',
-				logo: rotaractLogo,
-				period: '2026',
-				fit: 'contain',
-			},
-			{
-				title: 'Volunteer',
-				note: 'Empowerment Squared Liberia',
-				href: 'https://liberia.empowermentsquared.org/',
-				svg: '/logos/empowerment-squared.svg',
-				period: '2026',
-				fit: 'contain',
-			},
-		],
-	},
-	{
-		label: 'Education',
-		items: [
-			{
-				title: 'BSc Information Technology',
-				note: 'BlueCrest University College',
-				icon: 'cap',
-				period: '2022 — 26',
-				fit: 'contain',
-			},
-		],
-	},
-];
-
-// Line art only — these render at 19px, where anything filled turns to a blob.
-// Each icon is split into named parts so the CSS below can move them
-// independently when the row is hovered; `p` is the part's class.
-type Part = { d: string; p: string };
-
-const icons: Record<string, Part[]> = {
-	// Bars grow out of the baseline, one after another.
-	chart: [
-		{ d: 'M3 20.1h18', p: 'base' },
-		{ d: 'M6.4 19.6v-5.2', p: 'bar bar-1' },
-		{ d: 'M12 19.6v-9.4', p: 'bar bar-2' },
-		{ d: 'M17.6 19.6v-6.8', p: 'bar bar-3' },
-	],
-	// Mortarboard tips while the tassel swings off the corner.
-	cap: [
-		{ d: 'M12 4.2l9.3 4.4-9.3 4.4-9.3-4.4z', p: 'board' },
-		{ d: 'M6.4 10.8v4.3c0 1.6 2.5 2.8 5.6 2.8s5.6-1.2 5.6-2.8v-4.3', p: 'brim' },
-		{ d: 'M21.3 8.6v4', p: 'tassel' },
-	],
+type Entry = {
+ title: string;
+ note: string;
+ href?: string;
+ tag?: string;
+ variant?: string;
+ period?: string;
+ logo?: ImageMetadata;
+ logoDark?: ImageMetadata;
+ svg?: string;
+ icon?: 'chart' | 'cap';
 };
+const groups: { label: string; items: Entry[] }[] = [
+ { label: 'Projects', items: products },
+ { label: 'Experience', items: [
+  { title: 'MAS Pharmacy', note: 'Data & inventory operations', tag: 'Data Analytics', variant: 'data', period: '2026', icon: 'chart' },
+ ] },
+ { label: 'Community', items: [
+  { title: 'Rotaract Club of Congo Town', note: 'Charter President', period: '2026', logo: rotaractLogo },
+  { title: 'Empowerment Squared Liberia', note: 'Volunteer', href: 'https://liberia.empowermentsquared.org/', period: '2026', svg: '/logos/empowerment-squared.svg' },
+ ] },
+ { label: 'Education', items: [
+  { title: 'BlueCrest University College', note: 'BSc Information Technology', period: '2022 — 26', icon: 'cap' },
+ ] },
+];
 ---
 
-<section class="work">
-	<h2 class="heading" data-anim="fade">Work</h2>
-
-	<div class="table">
-		{
-			groups.map((group) => (
-				<div class="group">
-					<h3 class="group-label" data-anim="fade">{group.label}</h3>
-
-					{group.items.map((item) => (
-				<div class="rowline" data-anim="row">
-					<span
-						class="tile"
-						data-icon={item.icon}
-						data-fit={item.fit}
-						aria-hidden="true"
-					>
-						{item.logo ? (
-							<>
-								<Image class:list={{ 'logo-light': 'logoDark' in item && !!item.logoDark }} src={item.logo} alt="" width={96} densities={[1, 2]} loading="lazy" />
-								{'logoDark' in item && item.logoDark && (
-									<Image class="logo-dark" src={item.logoDark} alt="" width={96} densities={[1, 2]} loading="lazy" />
-								)}
-							</>
-						) : item.svg ? (
-							<img src={item.svg} alt="" width="96" height="96" data-invert={item.invert} loading="lazy" />
-						) : (
-							<svg viewBox="0 0 24 24">
-								{icons[item.icon].map((part) => (
-									<path class={part.p} d={part.d} />
-								))}
-							</svg>
-						)}
-					</span>
-
-					<span class="title">
-						<span class="head">
-							{item.href && item.href !== PLACEHOLDER ? (
-								<a href={item.href} target="_blank" rel="noopener">
-									{item.title}
-								</a>
-							) : (
-								item.title
-							)}
-							{/* A chip that just repeats its group heading says nothing. */}
-							{item.tag && item.tag !== group.label && (
-								<span class:list={['tag', item.variant]}>{item.tag}</span>
-							)}
-						</span>
-						<span class="note">{item.note}</span>
-					</span>
-
-					<span class="category">{item.period}</span>
-				</div>
-					))}
-				</div>
-			))
-		}
-	</div>
+<section class="work" aria-labelledby="work-heading">
+ <h2 id="work-heading" class="heading" data-anim="fade">Work</h2>
+ <ul class="folders">
+  {groups.map((group) => (
+   <li class="folder-branch">
+    <details class="folder" open>
+     <summary>
+      <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+       <path class="folder-back" d="M3 18.5V5.8A1.8 1.8 0 0 1 4.8 4h4.1l2.2 2.5h8.1A1.8 1.8 0 0 1 21 8.3v2.2" />
+       <path class="folder-front" d="M3 19h15.8a1.5 1.5 0 0 0 1.45-1.1L22 11H7l-2 6.7A1.8 1.8 0 0 1 3 19Z" />
+      </svg>
+      <h3>{group.label}</h3>
+      <span class="folder-count" aria-label={`${group.items.length} ${group.items.length === 1 ? 'item' : 'items'}`}>{group.items.length}</span>
+      <svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m6 4 4 4-4 4" /></svg>
+     </summary>
+     <ul class="entries">
+      {group.items.map((item) => (
+       <li class="entry">
+        <div class="entry-main">
+         <span class="entry-name">
+         {item.href && item.href !== PLACEHOLDER ? (
+          <a href={item.href} target="_blank" rel="noopener noreferrer">{item.title}<span class="external" aria-hidden="true">↗</span></a>
+         ) : <span class="entry-title">{item.title}</span>}
+         {item.logo || item.svg ? (
+          <img class="item-icon" src={item.logo?.src || item.svg} data-work-logo={item.logoDark ? '' : undefined} data-light-src={item.logo?.src} data-dark-src={item.logoDark?.src} alt="" width="16" height="16" loading="lazy" />
+         ) : (
+          <svg class="item-icon line-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           {item.icon === 'chart' ? <path d="M3 20h18M6 16v-4m6 4V6m6 10V9" /> : <><path d="m2 8 10-5 10 5-10 5L2 8Zm4 2v6c3 3 9 3 12 0v-6M22 8v7" /></>}
+          </svg>
+         )}
+         </span>
+         {item.tag && <span class:list={['tag', item.variant]}>{item.variant === 'building' && <span class="status-dot" aria-hidden="true" />}{item.tag}</span>}
+        </div>
+        <div class="entry-meta">
+         <span class="note"><span class="slashes" aria-hidden="true">// </span>{item.note}</span>
+         <span class="period">{item.period}</span>
+        </div>
+       </li>
+      ))}
+     </ul>
+    </details>
+   </li>
+  ))}
+ </ul>
 </section>
 
+<script>
+ const logos = document.querySelectorAll<HTMLImageElement>('[data-work-logo]');
+ const systemTheme = matchMedia('(prefers-color-scheme: light)');
+ function syncLogos() {
+  const theme = document.documentElement.dataset.theme;
+  const light = theme ? theme === 'light' : systemTheme.matches;
+  logos.forEach(logo => {
+   const src = light ? logo.dataset.lightSrc : logo.dataset.darkSrc;
+   if (src) logo.setAttribute('src', src);
+  });
+ }
+ syncLogos();
+ new MutationObserver(syncLogos).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+ systemTheme.addEventListener('change', syncLogos);
+</script>
+
 <style>
-	.work {
-		margin-top: clamp(4rem, 11vh, 7rem);
-	}
-
-	.heading {
-		margin: 0 0 1.35rem;
-		font-size: 1.0625rem;
-		font-weight: 600;
-		letter-spacing: -0.015em;
-		color: var(--text);
-	}
-
-	/* The group heading sits in the tile column's gutter so it lines up with
-	   the left edge of the section, not with the row titles — it labels the
-	   block, it isn't another row. */
-	.group + .group {
-		margin-top: 2rem;
-	}
-
-	.group-label {
-		margin: 0 0 0.35rem;
-		font-size: 0.8125rem;
-		font-weight: 400;
-		color: var(--faint);
-	}
-
-	.rowline {
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		gap: 1rem;
-		align-items: center;
-		padding: 0.85rem 0;
-		cursor: default;
-	}
-
-	.tile {
-		display: grid;
-		place-items: center;
-		width: 2.9rem;
-		height: 2.9rem;
-		border: 1px solid var(--card-line);
-		border-radius: 12px;
-		background: var(--card);
-		color: var(--faint);
-		transition: color 0.3s ease, border-color 0.3s ease;
-	}
-
-	/* Logo tiles: the artwork is the tile, so it loses the inner padding a
-	   line-art glyph needs. 'cover' is for an app icon that ships its own
-	   background; 'contain' is for a transparent mark. */
-	.tile img {
-		width: 100%;
-		height: 100%;
-		border-radius: inherit;
-		object-fit: contain;
-		transition: filter 0.45s ease;
-	}
-
-	.tile[data-fit='contain'] {
-		padding: 0.42rem;
-	}
-
-	.tile .logo-light { display: none; }
-	.tile .logo-dark { display: block; }
-	:global(:root[data-theme='light']) .tile .logo-light { display: block; }
-	:global(:root[data-theme='light']) .tile .logo-dark { display: none; }
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .tile .logo-light { display: block; }
-		:global(:root:not([data-theme])) .tile .logo-dark { display: none; }
-	}
-
-	.tile[data-fit='cover'] {
-		padding: 0;
-		overflow: hidden;
-	}
-
-	.tile[data-fit='cover'] img {
-		object-fit: cover;
-	}
-
-	/* The MansaStock mark is flat black. It needs flipping on the dark theme,
-	   and left alone on the light one — :global so Astro doesn't scope the
-	   :root part of the selector to this component and break the match. */
-	.tile img[data-invert] {
-		filter: invert(1);
-	}
-
-	:global(:root[data-theme='light']) .tile img[data-invert] {
-		filter: none;
-	}
-
-	@media (prefers-color-scheme: light) {
-		:global(:root:not([data-theme])) .tile img[data-invert] {
-			filter: none;
-		}
-	}
-
-	.tile svg {
-		width: 1.25rem;
-		height: 1.25rem;
-		fill: none;
-		stroke: currentColor;
-		stroke-width: 1.6;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-		overflow: visible;
-	}
-
-	/* Every moving part shares one transition. `fill-box` is what makes a
-	   transform-origin like `bottom` resolve against the shape itself rather
-	   than the whole 24x24 canvas — without it the bars pivot off-screen. */
-	.tile svg path {
-		transform-box: fill-box;
-		transform-origin: center;
-		transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-			opacity 0.3s ease;
-	}
-
-	/* The icons animate on any row hover. Unlike the colour change below,
-	   a bit of movement doesn't promise the row is clickable. */
-
-
-	/* Chart: the bars redraw themselves, staggered, like fresh numbers. */
-	.tile[data-icon='chart'] .bar {
-		transform-origin: bottom;
-	}
-
-	.rowline:hover .tile[data-icon='chart'] .bar-1 {
-		transform: scaleY(1.55);
-	}
-
-	.rowline:hover .tile[data-icon='chart'] .bar-2 {
-		transform: scaleY(0.66);
-		transition-delay: 0.06s;
-	}
-
-	.rowline:hover .tile[data-icon='chart'] .bar-3 {
-		transform: scaleY(1.3);
-		transition-delay: 0.12s;
-	}
-
-	/* Mortarboard: the board tips and the tassel swings off the corner. */
-	.tile[data-icon='cap'] .tassel {
-		transform-origin: top;
-	}
-
-	.rowline:hover .tile[data-icon='cap'] .board {
-		transform: rotate(-8deg) translateY(-0.7px);
-	}
-
-	.rowline:hover .tile[data-icon='cap'] .tassel {
-		transform: rotate(17deg);
-	}
-
-	.title {
-		display: flex;
-		flex-direction: column;
-		gap: 0.1rem;
-		min-width: 0;
-	}
-
-	.head {
-		display: inline-flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 0.55rem;
-		font-size: 1.0625rem;
-		font-weight: 600;
-		letter-spacing: -0.015em;
-	}
-
-	.note {
-		color: var(--faint);
-		font-size: 0.875rem;
-		line-height: 1.4;
-	}
-
-	.title a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.category {
-		color: var(--muted);
-		font-size: 0.875rem;
-		text-align: right;
-		font-variant-numeric: tabular-nums;
-		white-space: nowrap;
-	}
-
-	.title,
-	.category {
-		transition: color 0.3s ease;
-	}
-
-	/* Only rows that actually go somewhere react to hover. Lighting up a row
-	   that isn't clickable reads as an affordance and then dead-ends. */
-	.rowline:has(a):hover .tile {
-		color: var(--accent);
-		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-	}
-
-	.rowline:has(a):hover .title a {
-		color: var(--accent);
-	}
-
-	.rowline:has(a):hover .category {
-		color: var(--text);
-	}
-
-	.tag {
-		font-size: 0.75rem;
-		line-height: 1;
-		padding: 0.28em 0.5em;
-		border-radius: 5px;
-		font-weight: 500;
-		letter-spacing: 0.01em;
-	}
-
-	.tag.building {
-		color: var(--tag-building-fg);
-		background: var(--tag-building-bg);
-	}
-
-	.tag.data {
-		color: var(--tag-data-fg);
-		background: var(--tag-data-bg);
-	}
-
-	/* Phones: the period drops under the title rather than squeezing the
-	   middle column down to two words a line. */
-	@media (max-width: 560px) {
-		.rowline {
-			grid-template-columns: auto 1fr;
-			row-gap: 0.15rem;
-		}
-
-		.category {
-			grid-column: 2;
-			text-align: left;
-			color: var(--faint);
-			font-size: 0.8125rem;
-		}
-	}
+ .work { margin-top: clamp(4rem, 11vh, 7rem); }
+ .heading { margin: 0 0 1.5rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.015em; }
+ .folders, .entries { list-style: none; margin: 0; padding: 0; }
+ .folders { --branch-color: var(--line); padding-left: 0.65rem; }
+ .folder-branch { position: relative; border-left: 1px solid var(--branch-color); padding: 0 0 1rem 1.5rem; }
+ .folder-branch::before { content: ''; position: absolute; top: 1.15rem; left: 0; width: 1.1rem; border-top: 1px solid var(--branch-color); }
+ .folder-branch:last-child { border-left-color: transparent; padding-bottom: 0; }
+ .folder-branch:last-child::after { content: ''; position: absolute; left: -1px; top: 0; height: 1.15rem; border-left: 1px solid var(--branch-color); }
+ summary { display: flex; align-items: center; gap: 0.65rem; width: fit-content; min-height: 2.3rem; padding: 0.15rem 0.35rem; margin-left: -0.35rem; border-radius: 5px; cursor: pointer; list-style: none; color: var(--muted); transition: color 180ms ease, background-color 180ms ease; }
+ summary::-webkit-details-marker { display: none; }
+ summary:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+ summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+ summary h3 { font-size: 1rem; font-weight: 400; margin: 0; }
+ .folder[open] > summary { color: var(--accent); }
+ .folder-icon { width: 1.2rem; height: 1.2rem; flex: none; }
+ .folder-front { fill: color-mix(in srgb, var(--accent) 8%, var(--bg)); transform-origin: 3px 19px; transition: transform 180ms ease; }
+ .folder:not([open]) .folder-front { transform: skewY(-8deg) scaleY(1.15); }
+ .folder-count { font-size: 0.6875rem; color: var(--faint); font-variant-numeric: tabular-nums; }
+ .chevron { width: 0.8rem; height: 0.8rem; color: var(--faint); transition: transform 180ms ease; }
+ .folder[open] .chevron { transform: rotate(90deg); }
+ .entries { margin: 0.4rem 0 0.3rem 0.55rem; }
+ .entry { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(10rem, 43%); gap: 0.5rem 1.25rem; padding: 0.7rem 0 0.7rem 1.5rem; border-left: 1px solid var(--branch-color); }
+ .entry::before { content: ''; position: absolute; left: 0; top: 1.45rem; width: 0.9rem; border-top: 1px solid var(--branch-color); }
+ .entry:last-child { border-left-color: transparent; }
+ .entry:last-child::after { content: ''; position: absolute; left: -1px; top: 0; height: 1.45rem; border-left: 1px solid var(--branch-color); }
+ .entry-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem 0.55rem; min-width: 0; font-size: 0.9375rem; line-height: 1.65; }
+ .entry-name { display: inline-flex; align-items: baseline; gap: 0.4rem; min-width: 0; }
+ .item-icon { width: 1rem; height: 1rem; flex: none; align-self: center; object-fit: contain; }
+ .line-icon { color: var(--muted); }
+ .entry a { color: var(--text); text-decoration: none; transition: color 180ms ease; }
+ .entry a:hover, .entry a:focus-visible { color: var(--accent); }
+ .entry a:focus-visible { outline-offset: 4px; }
+ .external { display: inline-block; margin-left: 0.25rem; font-size: 0.75rem; color: var(--faint); transition: color 180ms ease; }
+ .entry a:hover .external { color: var(--accent); }
+ .entry-title { color: var(--text); }
+ .entry-meta { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0.1rem; text-align: right; }
+ .note { color: var(--muted); font-size: 0.75rem; line-height: 1.65; }
+ .slashes { color: var(--faint); }
+ .period { color: var(--faint); font-size: 0.6875rem; font-variant-numeric: tabular-nums; }
+ .tag { display: inline-flex; align-items: center; gap: 0.35em; padding: 0.25em 0.45em; border-radius: 4px; font-size: 0.625rem; line-height: 1.4; white-space: nowrap; }
+ .tag.building { color: var(--tag-building-fg); background: var(--tag-building-bg); }
+ .tag.data { color: var(--tag-data-fg); background: var(--tag-data-bg); }
+ .status-dot { width: 0.35em; height: 0.35em; border-radius: 50%; background: currentColor; }
+ @media (max-width: 600px) {
+  .folder-branch { padding-left: 1.15rem; }
+  .folder-branch::before { width: 0.75rem; }
+  .entry { grid-template-columns: minmax(0, 1fr); padding-left: 1.1rem; }
+  .entry::before { width: 0.65rem; }
+  .entry-meta { align-items: flex-start; text-align: left; gap: 0.25rem 0.7rem; flex-direction: row; flex-wrap: wrap; }
+  .entry-main { font-size: 0.875rem; }
+ }
 </style>
