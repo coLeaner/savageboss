@@ -1,0 +1,75 @@
+<script>
+	const root = document.documentElement;
+	const toggle = document.getElementById('theme-toggle');
+	let switching = false;
+
+	toggle?.addEventListener('click', async () => {
+		if (switching) return;
+		const next = getComputedStyle(root).colorScheme === 'dark' ? 'light' : 'dark';
+		const applyTheme = () => {
+			root.dataset.theme = next;
+			try { localStorage.setItem('theme', next); } catch {}
+		};
+		if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			applyTheme();
+			return;
+		}
+
+		// A 48px grid reveals the new page snapshot, radiating from the switch.
+		// Distance supplies the wave; jitter breaks its edge into scattered tiles.
+		const rect = toggle.getBoundingClientRect();
+		const originX = rect.left + rect.width / 2;
+		const originY = rect.top + rect.height / 2;
+		const radius = Math.hypot(Math.max(originX, innerWidth - originX), Math.max(originY, innerHeight - originY));
+		const tiles: { path: string; delay: number }[] = [];
+		for (let y = 0; y < innerHeight; y += 48) {
+			for (let x = 0; x < innerWidth; x += 48) {
+				const distance = Math.hypot(x + 24 - originX, y + 24 - originY) / radius;
+				tiles.push({ path: `M${x} ${y}h48v48h-48z`, delay: (distance * 0.75 + Math.random() * 0.25) * 700 });
+			}
+		}
+		const mask = document.createElement('style');
+		const paint = (elapsed: number) => {
+			const path = tiles.filter(tile => tile.delay <= elapsed).map(tile => tile.path).join('');
+			mask.textContent = `::view-transition-new(root){clip-path:path('M0 0${path}')}`;
+		};
+		switching = true;
+		root.classList.add('theme-switching');
+		paint(-1);
+		document.head.append(mask);
+		let frame = 0;
+		try {
+			const transition = document.startViewTransition(applyTheme);
+			await transition.ready;
+			root.animate({ opacity: [1, 1] }, { duration: 750, pseudoElement: '::view-transition-new(root)' });
+			const start = performance.now();
+			const reveal = (now: number) => {
+				paint(now - start);
+				if (now - start < 700) frame = requestAnimationFrame(reveal);
+			};
+			frame = requestAnimationFrame(reveal);
+			await transition.finished;
+		} catch {
+			applyTheme();
+		} finally {
+			cancelAnimationFrame(frame);
+			mask.remove();
+			root.classList.remove('theme-switching');
+			switching = false;
+		}
+	});
+</script>
+
+<style is:global>
+	/* Capture exact palettes; component color fades would muddy the tile edges. */
+	html.theme-switching *,
+	html.theme-switching *::before,
+	html.theme-switching *::after {
+		transition: none !important;
+	}
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+		mix-blend-mode: normal;
+	}
+</style>
