@@ -1,0 +1,4 @@
+[    5988ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://wrtmqntbeygdbuaffzjq.supabase.co/rest/v1/rpc/record_visit:0
+[  134519ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://wrtmqntbeygdbuaffzjq.supabase.co/rest/v1/rpc/record_visit:0
+[  392933ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://wrtmqntbeygdbuaffzjq.supabase.co/rest/v1/rpc/record_visit:0
+[  802930ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://wrtmqntbeygdbuaffzjq.supabase.co/rest/v1/rpc/record_visit:0

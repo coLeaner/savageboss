@@ -1,10 +1,13 @@
 ---
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
+import '@fontsource/fragment-mono/latin-400.css';
+import '@fontsource/fragment-mono/latin-400-italic.css';
 // Hashed URL for the one subset every visitor actually needs, so it can be
 // preloaded instead of waiting on the CSS to parse first.
-import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import fragmentLatin from '@fontsource/fragment-mono/files/fragment-mono-latin-400-normal.woff2?url';
 import CursorDot from '../components/CursorDot.astro';
+import ThemeTransition from '../components/ThemeTransition.astro';
 
 interface Props {
 	title?: string;
@@ -27,7 +30,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<link rel="canonical" href={canonical} />
-		<link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+		<link rel="preload" href={fragmentLatin} as="font" type="font/woff2" crossorigin />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
@@ -53,8 +56,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 					if (stored === 'light' || stored === 'dark') {
 						d.setAttribute('data-theme', stored);
 					}
-					if (localStorage.getItem('font') === 'mono') {
-						d.setAttribute('data-font', 'mono');
+					var font = localStorage.getItem('font');
+					if (font === 'mono' || font === 'sans') {
+						d.setAttribute('data-font', font);
 					}
 				} catch (e) {}
 
@@ -83,41 +87,36 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		<slot />
 		<CursorDot />
 
-		<script is:inline>
-			(function () {
-				var d = document.documentElement;
-				var btn = document.getElementById('theme-toggle');
-				if (!btn) return;
-				function current() {
-					var attr = d.getAttribute('data-theme');
-					if (attr) return attr;
-					return window.matchMedia('(prefers-color-scheme: light)').matches
-						? 'light'
-						: 'dark';
-				}
-				btn.addEventListener('click', function () {
-					var next = current() === 'dark' ? 'light' : 'dark';
-					d.setAttribute('data-theme', next);
-					try {
-						localStorage.setItem('theme', next);
-					} catch (e) {}
-				});
-			})();
-		</script>
+		<ThemeTransition />
 	</body>
 </html>
 
 <style is:global>
+	@font-face {
+		font-family: 'Swansea';
+		src: url('/fonts/swansea.ttf') format('truetype');
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+
 	:root {
 		--content: 48rem;
 		--gutter: clamp(1.25rem, 5vw, 2rem);
 		--font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
 		--font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+		--font: 'Fragment Mono', ui-monospace, monospace;
+		--font-display: 'Swansea', var(--font-sans);
+	}
+
+	:root[data-font='sans'] {
 		--font: var(--font-sans);
+		--font-display: var(--font-sans);
 	}
 
 	:root[data-font='mono'] {
 		--font: var(--font-mono);
+		--font-display: var(--font-mono);
 	}
 
 	/* Dark palette — the default, and whenever the user picks dark. */
@@ -223,7 +222,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 		background-size: 192px 192px;
 		color: var(--text);
 		font-family: var(--font);
-		font-size: clamp(1rem, 0.95rem + 0.3vw, 1.1875rem);
+		font-size: clamp(0.9375rem, 0.9rem + 0.15vw, 1rem);
 		line-height: 1.65;
 		letter-spacing: -0.006em;
 		font-feature-settings: 'cv11', 'ss01';

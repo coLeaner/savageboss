@@ -1,6 +1,7 @@
 ---
-// Custom dropdown at the bottom to switch the page font (Inter ⇄ JetBrains Mono).
+// Reference typography is the default; keep the original alternatives available.
 const fonts = [
+	{ value: 'reference', label: 'Fragment Mono' },
 	{ value: 'sans', label: 'Inter' },
 	{ value: 'mono', label: 'JetBrains Mono' },
 ];
@@ -18,7 +19,7 @@ const fonts = [
 			aria-haspopup="listbox"
 			aria-expanded="false"
 		>
-			<span data-fs-current>Inter</span>
+			<span data-fs-current>Fragment Mono</span>
 			<svg class="caret" viewBox="0 0 12 8" aria-hidden="true">
 				<path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
 			</svg>
@@ -50,11 +51,11 @@ const fonts = [
 			var o = opts.find(function (x) {
 				return x.getAttribute('data-value') === v;
 			});
-			return o ? o.textContent.trim() : 'Inter';
+			return o ? o.textContent.trim() : 'Fragment Mono';
 		}
 
 		function sync(v) {
-			if (v === 'mono') d.setAttribute('data-font', 'mono');
+			if (v === 'mono' || v === 'sans') d.setAttribute('data-font', v);
 			else d.removeAttribute('data-font');
 			current.textContent = labelFor(v);
 			opts.forEach(function (o) {
@@ -123,7 +124,7 @@ const fonts = [
 		});
 
 		// Reflect whatever the pre-paint script already applied.
-		sync(d.getAttribute('data-font') === 'mono' ? 'mono' : 'sans');
+		sync(d.getAttribute('data-font') || 'reference');
 	})();
 </script>
 

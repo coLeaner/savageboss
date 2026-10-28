@@ -6,6 +6,8 @@
 import { Image } from 'astro:assets';
 import avatar from '../assets/photos/profile.jpg';
 import PhotoPreview from './PhotoPreview.astro';
+import mansaLightLogo from '../assets/logos/mansastock-light.webp';
+import mansaDarkLogo from '../assets/logos/mansastock-dark.webp';
 
 const email = 'abrahamasheriff6@gmail.com';
 const github = 'https://github.com/coLeaner';
@@ -55,8 +57,8 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 	<div class="body">
 		<p data-anim="lines">
 			I'm a web developer building simple, user-friendly digital experiences.
-			Right now that means <a href={mansaStock} data-photo-preview="mansa" target="_blank" rel="noopener"
-				>MansaStock</a
+			Right now that means <a class="contact-link" href={mansaStock} data-photo-preview="mansa" target="_blank" rel="noopener"
+				><span>MansaStock</span><img class="contact-icon" data-mansa-logo data-light-src={mansaLightLogo.src} data-dark-src={mansaDarkLogo.src} src={mansaDarkLogo.src} alt="" width="16" height="16" /></a
 			>, an AI business management app.
 		</p>
 		<p data-anim="lines">
@@ -71,7 +73,7 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 			<a class="organization" href="https://liberia.empowermentsquared.org/" target="_blank" rel="noopener noreferrer">Empowerment Squared Liberia</a>.
 		</p>
 		<p data-anim="lines">
-			Reach me by <a href={`mailto:${email}`}>email</a>{
+			Reach me by <a class="contact-link" href={`mailto:${email}`}><span>email</span><svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 6 9 7 9-7" /></svg></a>{
 				linkedin !== '#' && (
 					<>
 						{' or on '}
@@ -85,12 +87,30 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 			    and it treated the link and the full stop as separate units —
 			    leaving a lone "." stranded on its own line. nowrap keeps them
 			    on the same line whichever way the text breaks. */}
-			<span class="no-break"><a href={github} target="_blank" rel="noopener">GitHub</a>.</span>
+			<span class="no-break"><a class="contact-link" href={github} target="_blank" rel="noopener"><span>GitHub</span><svg class="contact-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .75a11.25 11.25 0 0 0-3.56 21.92c.56.1.77-.24.77-.54v-2.1c-3.13.68-3.79-1.33-3.79-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.15a10.8 10.8 0 0 1 5.63 0c2.15-1.46 3.1-1.15 3.1-1.15.61 1.55.23 2.7.11 2.98.72.79 1.16 1.8 1.16 3.02 0 4.32-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08v3.1c0 .3.2.65.77.54A11.25 11.25 0 0 0 12 .75Z" /></svg></a>.</span>
 		</p>
 	</div>
 </header>
 
 <PhotoPreview />
+
+<script>
+	const logo = document.querySelector<HTMLImageElement>('[data-mansa-logo]');
+	const systemTheme = matchMedia('(prefers-color-scheme: light)');
+	function syncMansaLogo() {
+		if (!logo) return;
+		const theme = document.documentElement.dataset.theme;
+		const light = theme ? theme === 'light' : systemTheme.matches;
+		const src = light ? logo.dataset.lightSrc : logo.dataset.darkSrc;
+		if (src) logo.setAttribute('src', src);
+	}
+	syncMansaLogo();
+	new MutationObserver(syncMansaLogo).observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ['data-theme'],
+	});
+	systemTheme.addEventListener('change', syncMansaLogo);
+</script>
 
 <style>
 	.intro {
@@ -117,6 +137,7 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 	}
 
 	.name {
+		font-family: var(--font-display);
 		margin: 0;
 		display: flex;
 		align-items: center;
@@ -166,6 +187,21 @@ const mansaStock = 'https://mansa-stock.vercel.app';
 
 	.no-break {
 		white-space: nowrap;
+	}
+
+	.contact-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3em;
+		white-space: nowrap;
+		vertical-align: baseline;
+	}
+
+	.contact-icon {
+		width: 0.9em;
+		height: 0.9em;
+		flex: none;
+		align-self: center;
 	}
 
 	.body a {

@@ -1,4 +1,5 @@
 ---
+import KpiBackdrop from './KpiBackdrop.astro';
 // GitHub contribution heatmap.
 //
 // Fetched at BUILD TIME from GitHub's own public contributions fragment —
@@ -105,14 +106,40 @@ const months = starts
 		return end - col >= 3;
 	})
 	.map(({ col, month }) => ({ col, name: MONTHS[month] }));
+
+// Use the same build-time snapshot as the heatmap so the overview agrees
+// with the calendar and needs no extra API or credentials.
+const chronologicalDays = [...cells].sort((a, b) => a.date.localeCompare(b.date));
+const activeDays = chronologicalDays.filter(day => Number(day.level) > 0).length;
+let streak = 0;
+let longestStreak = 0;
+for (const day of chronologicalDays) {
+	streak = Number(day.level) > 0 ? streak + 1 : 0;
+	longestStreak = Math.max(longestStreak, streak);
+}
+const overview = [
+	{ label: 'Contributions', value: total || '—', detail: 'Past year', icon: 'M12 3v18M3 12h18M5.6 5.6l12.8 12.8M5.6 18.4 18.4 5.6' },
+	{ label: 'Active days', value: activeDays.toLocaleString('en-US'), detail: 'Past year', icon: 'M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Zm3 11 3 3 5-5' },
+	{ label: 'Longest streak', value: longestStreak.toLocaleString('en-US'), detail: 'Days in a row · past year', icon: 'm13 3-8 11h6l-1 7 9-12h-7l1-6Z' },
+];
 ---
 
 {
 	weeks.length > 0 && (
 		<section class="contrib">
 			<h2 class="heading" data-anim="fade">
-				Contributions
+				GitHub overview
 			</h2>
+
+			<dl class="kpis" aria-label="GitHub activity in the past year">
+				{overview.map((metric, index) => (
+					<div class="kpi">
+						<KpiBackdrop variant={index} />
+						<dt><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={metric.icon} /></svg>{metric.label}</dt>
+						<dd>{metric.value}<span>{metric.detail}</span></dd>
+					</div>
+				))}
+			</dl>
 
 			<div class="card" data-anim="fade">
 				<div class="scroll" data-heat-scroll>
@@ -182,6 +209,19 @@ const months = starts
 		font-weight: 600;
 		letter-spacing: -0.015em;
 		color: var(--text);
+	}
+
+	.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 0 0 0.75rem; }
+	.kpi { position: relative; isolation: isolate; overflow: hidden; padding: 1rem 1.1rem; background: var(--card); border: 1px solid var(--card-line); border-radius: 12px; }
+	.kpi dt { position: relative; display: flex; align-items: center; gap: 0.4rem; color: var(--muted); font-size: 0.6875rem; }
+	.kpi dt svg { width: 0.9rem; height: 0.9rem; flex: none; color: var(--faint); }
+	.kpi dd { position: relative; margin: 0.6rem 0 0; color: var(--text); font-size: clamp(1.4rem, 3vw, 1.85rem); line-height: 1.2; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+	.kpi dd span { display: block; margin-top: 0.45rem; color: var(--text); font-size: 0.625rem; line-height: 1.5; letter-spacing: 0; }
+	@media (max-width: 560px) {
+		.kpis { gap: 0.4rem; }
+		.kpi { padding: 0.8rem 0.6rem; border-radius: 9px; }
+		.kpi dt { flex-wrap: wrap; font-size: 0.625rem; gap: 0.3rem; }
+		.kpi dd span { font-size: 0.5625rem; }
 	}
 
 	/* --card is a charcoal a step lighter than the page, so the card reads as
