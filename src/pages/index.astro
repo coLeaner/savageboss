@@ -238,6 +238,43 @@ import Footer from '../components/Footer.astro';
 					);
 				});
 
+			// GitHub overview: cards rise in sequence, then the calendar fills
+			// week by week. Separate triggers keep both reveals tied to visibility.
+			const kpis = document.querySelector<HTMLElement>('[data-kpis]');
+			if (kpis) {
+				gsap.fromTo(kpis.children, { opacity: 0, y: 24, scale: 0.97 }, {
+					opacity: 1,
+					y: 0,
+					scale: 1,
+					duration: 0.7,
+					stagger: 0.12,
+					ease,
+					clearProps: 'opacity,transform',
+					scrollTrigger: { trigger: kpis, start: 'top 88%', once: true },
+				});
+			}
+
+			const heatCard = document.querySelector<HTMLElement>('[data-heat-card]');
+			const heatGrid = heatCard?.querySelector<HTMLElement>('[data-heat-grid]');
+			if (heatCard && heatGrid) {
+				gsap.timeline({
+					scrollTrigger: { trigger: heatCard, start: 'top 88%', once: true },
+				})
+					.fromTo(heatCard, { opacity: 0, y: 18 }, {
+						opacity: 1, y: 0, duration: 0.65, ease,
+						clearProps: 'opacity,transform',
+					})
+					.fromTo(heatGrid.children, { opacity: 0, scale: 0.5 }, {
+						opacity: 1,
+						scale: 1,
+						duration: 0.35,
+						// Markup runs down each week's seven days before moving right.
+						stagger: (index) => Math.floor(index / 7) * 0.012,
+						ease: 'power2.out',
+						clearProps: 'opacity,transform',
+					}, 0.15);
+			}
+
 			// autoSplit re-measures the line breaks when the viewport changes —
 			// without it a phone rotation leaves text reflowing inside masks
 			// that were measured for the old width. The reveal itself only plays
