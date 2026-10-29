@@ -131,7 +131,7 @@ const overview = [
 				GitHub overview
 			</h2>
 
-			<dl class="kpis" aria-label="GitHub activity in the past year">
+			<dl class="kpis" data-kpis aria-label="GitHub activity in the past year">
 				{overview.map((metric, index) => (
 					<div class="kpi">
 						<KpiBackdrop variant={index} />
@@ -141,7 +141,7 @@ const overview = [
 				))}
 			</dl>
 
-			<div class="card" data-anim="fade">
+			<div class="card" data-heat-card>
 				<div class="scroll" data-heat-scroll>
 					<div class="calendar" style={`--weeks: ${weeks.length}`}>
 						<div class="months" aria-hidden="true">
